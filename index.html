@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DistribOS — Thane FMCG Distribution</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --border: #2a2a3a;
+  --accent: #00d4aa;
+  --accent2: #ff6b35;
+  --warn: #ffd166;
+  --danger: #ff4757;
+  --text: #e8e8f0;
+  --muted: #6b6b80;
+  --green: #06d6a0;
+  --blue: #4361ee;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+/* NAV */
+.app-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-tab{flex:1;padding:14px 8px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);transition:all .2s;border-bottom:2px solid transparent;font-family:'IBM Plex Mono',monospace}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tab .nav-icon{font-size:18px;display:block;margin-bottom:3px}
+/* PANELS */
+.panel{display:none;padding:16px;min-height:calc(100vh - 56px)}
+.panel.active{display:block}
+/* HEADER */
+.panel-header{margin-bottom:20px}
+.panel-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.panel-header p{font-size:13px;color:var(--muted);margin-top:4px}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+/* METRICS ROW */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.metric-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent)}
+.metric-lab{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:8px;border:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;transition:all .2s}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#00f0c0}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warn{background:var(--warn);color:#000}
+.btn-block{width:100%;justify-content:center;margin-bottom:8px}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+/* FORM */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;outline:none;transition:border .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field select option{background:var(--surface2)}
+/* STOCK BADGE */
+.stock-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.stock-ok{background:rgba(6,214,160,0.15);color:var(--green)}
+.stock-low{background:rgba(255,209,102,0.15);color:var(--warn)}
+.stock-out{background:rgba(255,71,87,0.15);color:var(--danger)}
+/* SKU LIST */
+.sku-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.sku-item:last-child{border-bottom:none}
+.sku-name{flex:1;font-size:14px;font-weight:500}
+.sku-qty-ctrl{display:flex;align-items:center;gap:8px}
+.qty-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-val{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;min-width:28px;text-align:center}
+/* ORDER LIST */
+.order-item{display:flex;justify-content:space-between;align-items:flex-start;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:8px;border-left:3px solid var(--accent)}
+.order-shop{font-weight:600;font-size:14px}
+.order-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.order-amt{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--accent)}
+/* STATUS PILL */
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px}
+.pill-pending{background:rgba(255,209,102,.15);color:var(--warn)}
+.pill-dispatched{background:rgba(67,97,238,.15);color:#7b8ef5}
+.pill-delivered{background:rgba(6,214,160,.15);color:var(--green)}
+/* ROUTE COMPARE TABLE */
+.route-table{width:100%;border-collapse:collapse;font-size:13px}
+.route-table th{background:var(--surface2);padding:10px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.route-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.route-table tr:last-child td{border-bottom:none}
+.best-badge{background:var(--accent);color:#000;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+/* AI RESPONSE */
+.ai-box{background:linear-gradient(135deg,rgba(0,212,170,.08),rgba(67,97,238,.08));border:1px solid rgba(0,212,170,.3);border-radius:10px;padding:14px;margin-top:12px;font-size:13px;line-height:1.6}
+.ai-box .ai-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px}
+/* PHOTO UPLOAD */
+.photo-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:border .2s;position:relative;overflow:hidden}
+.photo-zone:hover{border-color:var(--accent)}
+.photo-zone img{max-width:100%;border-radius:8px;margin-top:12px}
+.photo-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* GPS */
+.gps-box{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.gps-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.gps-dot.locked{background:var(--green);animation:none}
+/* DRIVER ROUTE */
+.stop-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.stop-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.stop-num.done{background:var(--green)}
+.stop-num.current{background:var(--accent2);animation:pulse 1.5s infinite}
+.stop-info{flex:1}
+.stop-shop{font-weight:600;font-size:14px}
+.stop-addr{font-size:12px;color:var(--muted);margin-top:2px}
+.stop-items{font-size:12px;color:var(--accent);margin-top:4px}
+.stop-amt{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600}
+/* COLLECTION */
+.collection-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+/* LOADING */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* SCROLLABLE */
+.scroll-area{max-height:320px;overflow-y:auto;padding-right:4px}
+.scroll-area::-webkit-scrollbar{width:4px}
+.scroll-area::-webkit-scrollbar-track{background:transparent}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* SECTION DIVIDER */
+.divider{height:1px;background:var(--border);margin:16px 0}
+/* TABS within panel */
+.sub-tabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto}
+.sub-tab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--muted);white-space:nowrap;transition:all .2s}
+.sub-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+/* BILL PREVIEW */
+.bill-preview{background:#fff;color:#000;border-radius:8px;padding:16px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+.bill-preview h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;text-align:center;margin-bottom:4px}
+.bill-preview .bill-sub{text-align:center;color:#666;margin-bottom:12px;font-size:11px}
+.bill-line{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #eee}
+.bill-total{display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:14px;border-top:2px solid #000;margin-top:4px}
+/* COMPARE CARDS */
+.compare-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.compare-card.recommended{border-color:var(--accent);background:rgba(0,212,170,.05)}
+.compare-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.compare-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)}
+.compare-row:last-child{border:none}
+.compare-pro{color:var(--green);font-size:12px}
+.compare-con{color:var(--danger);font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- MAIN NAV -->
+<div class="app-nav">
+  <div class="nav-tab active" onclick="switchPanel('sales')">
+    <span class="nav-icon">🛒</span>SALES REP
+  </div>
+  <div class="nav-tab" onclick="switchPanel('owner')">
+    <span class="nav-icon">📊</span>OWNER
+  </div>
+  <div class="nav-tab" onclick="switchPanel('driver')">
+    <span class="nav-icon">🚛</span>DRIVER
+  </div>
+  <div class="nav-tab" onclick="switchPanel('route')">
+    <span class="nav-icon">🗺️</span>ROUTES
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- ==================== PANEL 1: SALES REP ==================== -->
+<div id="panel-sales" class="panel active">
+  <div class="panel-header">
+    <h2>Sales Rep Portal</h2>
+    <p>Punch orders · Capture shops · Check stock</p>
+  </div>
+
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="switchSubTab('sales','new-order')">New Order</div>
+    <div class="sub-tab" onclick="switchSubTab('sales','stock-view')">Stock View</div>
+    <div class="sub-tab" onclick="switchSubTab('sales','my-orders')">My Orders</div>
+  </div>
+
+  <!-- SUB: NEW ORDER -->
+  <div id="sales-new-order" class="sub-panel">
+    <div class="card">
+      <div class="card-title">Step 1 — Select Your Brand</div>
+      <div class="field">
+        <label>Company</label>
+        <select id="rep-brand" onchange="loadBrandSKUs()">
+          <option value="">-- Select Brand --</option>
+          <option value="derby">Derby Confectionery</option>
+          <option value="healthbite">HealthBite Protein Bars</option>
+          <option value="freshglo">FreshGlo Personal Care</option>
+          <option value="crunchco">CrunchCo Snacks</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="rep-name" placeholder="e.g. Sujeet Gupta" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 2 — Capture Shop</div>
+      <div class="photo-zone" id="photo-zone" onclick="document.getElementById('shop-photo').click()">
+        <div style="font-size:32px">📷</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">Tap to photograph shop front</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">AI will read shop name from signboard</div>
+        <input type="file" id="shop-photo" accept="image/*" capture="environment" onchange="handleShopPhoto(event)" style="display:none">
+        <img id="shop-preview" style="display:none;max-width:100%;border-radius:8px;margin-top:12px" />
+      </div>
+      <div id="ai-shop-result" style="display:none" class="ai-box">
+        <div class="ai-label">⚡ AI Detected</div>
+        <div id="ai-shop-text"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 3 — Customer Details</div>
+      <div class="field">
+        <label>Shop Name</label>
+        <input type="text" id="shop-name" placeholder="Auto-filled by AI or type manually" />
+      </div>
+      <div class="field">
+        <label>Owner / Contact</label>
+        <input type="text" id="shop-owner" placeholder="Shop owner name" />
+      </div>
+      <div class="field">
+        <label>Shop Type</label>
+        <select id="shop-type">
+          <option>Kirana / General Store</option>
+          <option>Medical / Chemist</option>
+          <option>Bakery / Sweet Shop</option>
+          <option>Supermarket</option>
+          <option>Pan / Cigarette Shop</option>
+          <option>Hotel / Restaurant</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step 4 — GPS Location</div>
+      <div class="gps-box" id="gps-box">
+        <div class="gps-dot" id="gps-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600" id="gps-status">Waiting for GPS...</div>
+          <div style="font-size:11px;color:var(--muted)" id="gps-coords">Tap button to capture</div>
+        </div>
+        <button class="btn btn-secondary" style="padding:8px 14px;font-size:12px" onclick="captureGPS()">📍 Capture</button>
+      </div>
+    </div>
+
+    <div class="card" id="sku-card" style="display:none">
+      <div class="card-title">Step 5 — Select Items</div>
+      <div id="sku-list" class="scroll-area"></div>
+    </div>
+
+    <div id="order-summary-card" class="card" style="display:none">
+      <div class="card-title">Order Summary</div>
+      <div id="order-summary-lines"></div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px">
+        <span>Total</span>
+        <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace" id="order-total">₹0</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="submitOrder()" id="submit-btn" disabled>
+      ✅ Submit Order
+    </button>
+  </div>
+
+  <!-- SUB: STOCK VIEW -->
+  <div id="sales-stock-view" class="sub-panel" style="display:none">
+    <div class="field">
+      <label>Filter by Brand</label>
+      <select onchange="renderStockView(this.value)">
+        <option value="all">All Brands</option>
+        <option value="derby">Derby Confectionery</option>
+        <option value="healthbite">HealthBite Protein Bars</option>
+        <option value="freshglo">FreshGlo Personal Care</option>
+        <option value="crunchco">CrunchCo Snacks</option>
+      </select>
+    </div>
+    <div id="stock-list"></div>
+  </div>
+
+  <!-- SUB: MY ORDERS -->
+  <div id="sales-my-orders" class="sub-panel" style="display:none">
+    <div id="rep-orders-list"></div>
+  </div>
+</div>
+
+<!-- ==================== PANEL 2: OWNER DASHBOARD ==================== -->
+<div id="panel-owner" class="panel">
+  <div class="panel-header">
+    <h2>Owner Dashboard</h2>
+    <p>Today's live view — all brands, all orders</p>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-val" id="m-sales">₹0</div>
+      <div class="metric-lab">Today Sales</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="m-orders">0</div>
+      <div class="metric-lab">Orders</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="m-collected">₹0</div>
+      <div class="metric-lab">Collected</div>
+    </div>
+  </div>
+
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="switchSubTab('owner','orders')">Orders</div>
+    <div class="sub-tab" onclick="switchSubTab('owner','brands')">Brands</div>
+    <div class="sub-tab" onclick="switchSubTab('owner','billing')">Bills</div>
+    <div class="sub-tab" onclick="switchSubTab('owner','stock-mgmt')">Stock</div>
+  </div>
+
+  <!-- ORDERS -->
+  <div id="owner-orders">
+    <div id="owner-orders-list"></div>
+  </div>
+
+  <!-- BRANDS -->
+  <div id="owner-brands" style="display:none">
+    <div id="brand-performance"></div>
+  </div>
+
+  <!-- BILLING -->
+  <div id="owner-billing" style="display:none">
+    <div class="card">
+      <div class="card-title">Generate Bill</div>
+      <div class="field">
+        <label>Select Order</label>
+        <select id="bill-order-select"></select>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="generateBill()">🧾 Generate GST Invoice</button>
+    </div>
+    <div id="bill-output" style="display:none">
+      <div class="card-title" style="margin:12px 0 8px">Invoice Preview</div>
+      <div class="bill-preview" id="bill-content"></div>
+      <button class="btn btn-secondary btn-block" style="margin-top:10px" onclick="showToast('PDF download would trigger in production')">⬇️ Download PDF</button>
+    </div>
+  </div>
+
+  <!-- STOCK MANAGEMENT -->
+  <div id="owner-stock-mgmt" style="display:none">
+    <div id="owner-stock-list"></div>
+    <button class="btn btn-secondary btn-block" style="margin-top:8px" onclick="showToast('Stock adjustment saved')">+ Update Stock Levels</button>
+  </div>
+</div>
+
+<!-- ==================== PANEL 3: DRIVER APP ==================== -->
+<div id="panel-driver" class="panel">
+  <div class="panel-header">
+    <h2>Driver App</h2>
+    <p>Your route · Deliver · Collect</p>
+  </div>
+
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="switchSubTab('driver','my-route')">My Route</div>
+    <div class="sub-tab" onclick="switchSubTab('driver','collections')">Collections</div>
+    <div class="sub-tab" onclick="switchSubTab('driver','vehicle')">Vehicle</div>
+  </div>
+
+  <!-- ROUTE -->
+  <div id="driver-my-route">
+    <div class="metrics" style="grid-template-columns:repeat(4,1fr)">
+      <div class="metric"><div class="metric-val" style="font-size:18px">3</div><div class="metric-lab">Done</div></div>
+      <div class="metric"><div class="metric-val" style="font-size:18px;color:var(--accent2)">1</div><div class="metric-lab">Current</div></div>
+      <div class="metric"><div class="metric-val" style="font-size:18px;color:var(--muted)">8</div><div class="metric-lab">Pending</div></div>
+      <div class="metric"><div class="metric-val" style="font-size:18px">~14km</div><div class="metric-lab">Left</div></div>
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="openMapsRoute()">
+      🗺️ Open Full Route in Google Maps
+    </button>
+
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">Today's Stops — Zone A (Thane West)</div>
+      <div id="driver-stops"></div>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS -->
+  <div id="driver-collections" style="display:none">
+    <div class="metrics">
+      <div class="metric"><div class="metric-val">₹4,200</div><div class="metric-lab">Cash</div></div>
+      <div class="metric"><div class="metric-val">₹7,800</div><div class="metric-lab">UPI</div></div>
+      <div class="metric"><div class="metric-val" style="color:var(--green)">₹12,000</div><div class="metric-lab">Total</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Collection Log</div>
+      <div id="collection-log"></div>
+    </div>
+    <button class="btn btn-warn btn-block" onclick="showToast('Cash handover recorded. OTP sent to manager.')">💰 Mark Cash Handover</button>
+  </div>
+
+  <!-- VEHICLE -->
+  <div id="driver-vehicle" style="display:none">
+    <div class="card">
+      <div class="card-title">EV Status — Vehicle 1</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="collection-row"><span>Battery</span><span style="color:var(--green);font-weight:700">78% 🔋</span></div>
+        <div class="collection-row"><span>Est. Range Left</span><span style="font-family:'IBM Plex Mono',monospace">~32 km</span></div>
+        <div class="collection-row"><span>Last Charged</span><span style="font-family:'IBM Plex Mono',monospace">5:00 AM</span></div>
+        <div class="collection-row"><span>Load Weight</span><span style="font-family:'IBM Plex Mono',monospace">118 kg / 250 kg</span></div>
+        <div class="collection-row"><span>Vehicle</span><span>Tiranga EV — MH04 XX 1234</span></div>
+      </div>
+    </div>
+    <button class="btn btn-danger btn-block" onclick="showToast('Breakdown alert sent to manager!')">🚨 Report Breakdown</button>
+  </div>
+</div>
+
+<!-- ==================== PANEL 4: ROUTE OPTIMIZER ==================== -->
+<div id="panel-route" class="panel">
+  <div class="panel-header">
+    <h2>Route Optimizer</h2>
+    <p>Compare options · Choose your stack</p>
+  </div>
+
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="switchSubTab('route','compare')">Compare Tools</div>
+    <div class="sub-tab" onclick="switchSubTab('route','live-route')">Live Route Plan</div>
+    <div class="sub-tab" onclick="switchSubTab('route','optimize')">AI Optimize</div>
+  </div>
+
+  <!-- COMPARE -->
+  <div id="route-compare">
+    <div class="compare-card recommended">
+      <div class="compare-title">
+        🗺️ Google Maps Routes API (Built-in)
+        <span class="best-badge">RECOMMENDED</span>
+      </div>
+      <div class="compare-row"><span>Monthly Cost</span><span style="color:var(--green);font-weight:600">~₹2,500–3,500</span></div>
+      <div class="compare-row"><span>Integration</span><span>Native in this app</span></div>
+      <div class="compare-row"><span>Max Stops/Route</span><span>25 waypoints</span></div>
+      <div class="compare-row"><span>Auto Zone Split</span><span>✅ Yes (pin code clustering)</span></div>
+      <div class="compare-row"><span>Driver App</span><span>Opens Google Maps directly</span></div>
+      <div class="compare-row"><span>Real-time traffic</span><span>✅ Yes</span></div>
+      <div class="compare-row"><span>API available</span><span>✅ Full control</span></div>
+      <div style="margin-top:10px">
+        <div class="compare-pro">✅ No third-party dependency · Stays inside your app · Cheapest</div>
+        <div class="compare-con">⚠️ Need developer to implement the clustering logic once</div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="compare-title">⚡ Circuit App</div>
+      <div class="compare-row"><span>Monthly Cost</span><span>₹2,800–4,500 (team plan)</span></div>
+      <div class="compare-row"><span>Integration</span><span>CSV import / manual</span></div>
+      <div class="compare-row"><span>Max Stops/Route</span><span>Unlimited</span></div>
+      <div class="compare-row"><span>Auto Zone Split</span><span>⚠️ Manual zone setup</span></div>
+      <div class="compare-row"><span>Driver App</span><span>✅ Dedicated driver app</span></div>
+      <div class="compare-row"><span>Real-time traffic</span><span>✅ Yes</span></div>
+      <div class="compare-row"><span>API available</span><span>⚠️ Limited (no free API)</span></div>
+      <div style="margin-top:10px">
+        <div class="compare-pro">✅ Beautiful UI · Easy to use · Good driver app</div>
+        <div class="compare-con">⚠️ No deep billing integration · One-way data · Monthly fee forever</div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="compare-title">🔁 Routific</div>
+      <div class="compare-row"><span>Monthly Cost</span><span>₹4,500–7,000</span></div>
+      <div class="compare-row"><span>Integration</span><span>✅ Full REST API</span></div>
+      <div class="compare-row"><span>Max Stops/Route</span><span>Unlimited</span></div>
+      <div class="compare-row"><span>Auto Zone Split</span><span>✅ Multi-vehicle auto-split</span></div>
+      <div class="compare-row"><span>Driver App</span><span>✅ Yes</span></div>
+      <div class="compare-row"><span>Real-time traffic</span><span>✅ Yes</span></div>
+      <div class="compare-row"><span>API available</span><span>✅ Full control</span></div>
+      <div style="margin-top:10px">
+        <div class="compare-pro">✅ Best optimization algorithm · Built for multi-vehicle fleets</div>
+        <div class="compare-con">⚠️ Expensive for your scale · Overkill for 60 stops/vehicle</div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="compare-title">📦 Locus.sh (India-built)</div>
+      <div class="compare-row"><span>Monthly Cost</span><span>₹8,000–15,000</span></div>
+      <div class="compare-row"><span>Integration</span><span>✅ Full API + webhooks</span></div>
+      <div class="compare-row"><span>Auto Zone Split</span><span>✅ AI-based</span></div>
+      <div class="compare-row"><span>Driver App</span><span>✅ Yes</span></div>
+      <div class="compare-row"><span>India-specific</span><span>✅ Built for Indian roads</span></div>
+      <div style="margin-top:10px">
+        <div class="compare-pro">✅ Best for India · Hindi road names handled · GST-ready reports</div>
+        <div class="compare-con">⚠️ Enterprise pricing · Too heavy for startup phase</div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card-title">📋 Decision Matrix — What to Use When</div>
+      <table class="route-table">
+        <tr><th>Phase</th><th>Use</th><th>Why</th></tr>
+        <tr><td>Month 1–3<br><small>8–10 brands</small></td><td>Google Maps waypoints (manual)</td><td>Free, you control it, 60 stops/day is manageable</td></tr>
+        <tr><td>Month 4–8<br><small>15–20 brands</small></td><td><strong>Built-in Google Maps API</strong></td><td>Auto-cluster by pin code, 4-vehicle split, inside your app</td></tr>
+        <tr><td>Month 9+<br><small>Scale to 2 cities</small></td><td>Routific or Locus</td><td>Multi-city, 10+ vehicles, need serious optimization</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- LIVE ROUTE PLAN -->
+  <div id="route-live-route" style="display:none">
+    <div class="card">
+      <div class="card-title">Today's Route Plan — All 4 Zones</div>
+      <div id="zone-routes"></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="sendToDrivers()">📲 Push Routes to All Drivers</button>
+  </div>
+
+  <!-- AI OPTIMIZE -->
+  <div id="route-optimize" style="display:none">
+    <div class="card">
+      <div class="card-title">AI Route Optimizer</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Paste today's delivery addresses and AI will cluster them into 4 zones and generate optimized Google Maps links.</p>
+      <div class="field">
+        <label>Paste Addresses (one per line)</label>
+        <textarea id="addr-input" rows="6" placeholder="Shop 1, Naupada, Thane West&#10;Shop 2, Teen Haath Naka&#10;Shop 3, Kalwa&#10;..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="aiOptimizeRoute()" id="optimize-btn">
+        ⚡ AI Cluster & Optimize
+      </button>
+      <div id="optimize-result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const BRANDS = {
+  derby: {
+    name: 'Derby Confectionery',
+    color: '#ff6b35',
+    skus: [
+      {id:'D1',name:'Timbuktu',price:20,unit:'packet',stock:142},
+      {id:'D2',name:'Happy Birthday Eclairs',price:20,unit:'packet',stock:67},
+      {id:'D3',name:'Crunchiz Eclairs',price:20,unit:'packet',stock:8},
+      {id:'D4',name:'Milk Eclairs',price:20,unit:'packet',stock:0},
+      {id:'D5',name:'Coffee Bite',price:25,unit:'packet',stock:203},
+    ]
+  },
+  healthbite: {
+    name: 'HealthBite Protein Bars',
+    color: '#00d4aa',
+    skus: [
+      {id:'H1',name:'Choco Fudge Bar 6-pack',price:300,unit:'box',stock:45},
+      {id:'H2',name:'Peanut Crunch 6-pack',price:300,unit:'box',stock:12},
+      {id:'H3',name:'Vanilla Almond 6-pack',price:300,unit:'box',stock:0},
+    ]
+  },
+  freshglo: {
+    name: 'FreshGlo Personal Care',
+    color: '#4361ee',
+    skus: [
+      {id:'F1',name:'Vitamin C Serum 30ml',price:349,unit:'pcs',stock:78},
+      {id:'F2',name:'Niacinamide Toner',price:299,unit:'pcs',stock:34},
+      {id:'F3',name:'SPF 50 Sunscreen',price:249,unit:'pcs',stock:6},
+    ]
+  },
+  crunchco: {
+    name: 'CrunchCo Snacks',
+    color: '#ffd166',
+    skus: [
+      {id:'C1',name:'Masala Munchies Jar',price:250,unit:'jar',stock:55},
+      {id:'C2',name:'Cheese Puffs Jar',price:250,unit:'jar',stock:23},
+      {id:'C3',name:'Spicy Mix Jar',price:280,unit:'jar',stock:89},
+    ]
+  }
+};
+
+const MOCK_ORDERS = [
+  {id:'ORD001',shop:'Sharma General Store',brand:'derby',brandName:'Derby',rep:'Sujeet Gupta',items:[{name:'Timbuktu',qty:2,price:20},{name:'Happy Birthday',qty:2,price:20},{name:'Crunchiz',qty:4,price:20}],total:160,status:'pending',zone:'A',time:'8:14 AM',addr:'Naupada, Thane West',lat:19.197,lng:72.961},
+  {id:'ORD002',shop:'Patel Kirana',brand:'healthbite',brandName:'HealthBite',rep:'Ravi Shah',items:[{name:'Choco Fudge Bar 6-pack',qty:3,price:300}],total:900,status:'dispatched',zone:'B',time:'8:32 AM',addr:'Kalwa, Thane East',lat:19.178,lng:73.001},
+  {id:'ORD003',shop:'Meena Supermart',brand:'freshglo',brandName:'FreshGlo',rep:'Priya K',items:[{name:'Vitamin C Serum',qty:5,price:349},{name:'Sunscreen',qty:3,price:249}],total:2492,status:'delivered',zone:'C',time:'7:58 AM',addr:'Majiwada, Ghodbunder',lat:19.231,lng:72.978},
+  {id:'ORD004',shop:'National Stores',brand:'crunchco',brandName:'CrunchCo',rep:'Amit P',items:[{name:'Masala Munchies Jar',qty:6,price:250}],total:1500,status:'pending',zone:'D',time:'9:01 AM',addr:'Wagle Estate',lat:19.191,lng:72.972},
+];
+
+const DRIVER_STOPS = [
+  {num:1,shop:'Krishna Kirana',addr:'Shop 4, Naupada Road',items:'Timbuktu ×2, Coffee Bite ×3',amt:'₹115',done:true},
+  {num:2,shop:'Bala Stores',addr:'Near Ghantali Mandir',items:'Happy Birthday ×4',amt:'₹80',done:true},
+  {num:3,shop:'Suresh General',addr:'Teen Haath Naka',items:'Crunchiz ×2, Timbuktu ×5',amt:'₹140',done:true},
+  {num:4,shop:'Sharma General Store',addr:'Naupada Main Road',items:'Timbuktu ×2, Happy B ×2, Crunchiz ×4',amt:'₹160',current:true},
+  {num:5,shop:'New India Stores',addr:'Kopri Colony',items:'Coffee Bite ×10',amt:'₹250',done:false},
+  {num:6,shop:'Lakshmi Provision',addr:'Cadbury Junction',items:'Masala Jar ×2',amt:'₹500',done:false},
+  {num:7,shop:'Om Kirana',addr:'Pokhran Road 1',items:'Vitamin C Serum ×2',amt:'₹698',done:false},
+];
+
+let orderCart = {};
+let currentGPS = null;
+let orderInvoiceNum = 1005;
+
+// ============================================================
+// NAV
+// ============================================================
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(name === 'owner') initOwner();
+  if(name === 'driver') initDriver();
+  if(name === 'route') initRoute();
+}
+
+function switchSubTab(panel, sub) {
+  const parentEl = document.getElementById('panel-' + panel) || document.getElementById('route-compare')?.closest('.panel');
+  // hide all sub panels
+  const allSubs = document.querySelectorAll(`#panel-${panel} .sub-panel, #panel-${panel} > div[id^="${panel}-"], #panel-${panel} > div[id^="route-"]`);
+
+  // simpler approach: find all direct children that are sub content areas
+  const tabs = event.currentTarget.closest('.sub-tabs');
+  tabs.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  // hide/show logic by id pattern
+  const prefixes = {
+    sales: ['sales-new-order','sales-stock-view','sales-my-orders'],
+    owner: ['owner-orders','owner-brands','owner-billing','owner-stock-mgmt'],
+    driver: ['driver-my-route','driver-collections','driver-vehicle'],
+    route: ['route-compare','route-live-route','route-optimize']
+  };
+  prefixes[panel].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+  const target = document.getElementById(panel + '-' + sub) || document.getElementById(sub);
+  if(target) target.style.display = 'block';
+
+  if(sub === 'stock-view') renderStockView('all');
+  if(sub === 'my-orders') renderRepOrders();
+  if(sub === 'brands') renderBrandPerf();
+  if(sub === 'billing') renderBillingPanel();
+  if(sub === 'stock-mgmt') renderOwnerStock();
+  if(sub === 'live-route') renderLiveRoute();
+}
+
+// ============================================================
+// SALES REP
+// ============================================================
+function loadBrandSKUs() {
+  const brand = document.getElementById('rep-brand').value;
+  orderCart = {};
+  if(!brand) { document.getElementById('sku-card').style.display='none'; return; }
+  const b = BRANDS[brand];
+  document.getElementById('sku-card').style.display='block';
+  const list = document.getElementById('sku-list');
+  list.innerHTML = b.skus.map(sku => {
+    let badge, badgeCls;
+    if(sku.stock === 0){badge='OUT OF STOCK';badgeCls='stock-out';}
+    else if(sku.stock < 15){badge='LOW: '+sku.stock;badgeCls='stock-low';}
+    else{badge='IN STOCK: '+sku.stock;badgeCls='stock-ok';}
+    return `<div class="sku-item">
+      <div style="flex:1">
+        <div class="sku-name">${sku.name}</div>
+        <div style="font-size:12px;color:var(--muted)">₹${sku.price}/${sku.unit} &nbsp; <span class="stock-badge ${badgeCls}">${badge}</span></div>
+      </div>
+      <div class="sku-qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${sku.id}',-1)" ${sku.stock===0?'disabled':''}>−</button>
+        <span class="qty-val" id="qty-${sku.id}">0</span>
+        <button class="qty-btn" onclick="changeQty('${sku.id}',1)" ${sku.stock===0?'disabled':''}>+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function changeQty(skuId, delta) {
+  const brand = document.getElementById('rep-brand').value;
+  const sku = BRANDS[brand].skus.find(s => s.id === skuId);
+  if(!orderCart[skuId]) orderCart[skuId] = 0;
+  orderCart[skuId] = Math.max(0, Math.min(sku.stock, orderCart[skuId] + delta));
+  document.getElementById('qty-' + skuId).textContent = orderCart[skuId];
+  updateOrderSummary();
+}
+
+function updateOrderSummary() {
+  const brand = document.getElementById('rep-brand').value;
+  if(!brand) return;
+  const skus = BRANDS[brand].skus;
+  let total = 0, lines = '';
+  skus.forEach(sku => {
+    if(orderCart[sku.id] > 0) {
+      const amt = sku.price * orderCart[sku.id];
+      total += amt;
+      lines += `<div class="collection-row"><span>${sku.name} ×${orderCart[sku.id]}</span><span style="font-family:'IBM Plex Mono',monospace">₹${amt}</span></div>`;
+    }
+  });
+  const card = document.getElementById('order-summary-card');
+  card.style.display = total > 0 ? 'block' : 'none';
+  document.getElementById('order-summary-lines').innerHTML = lines;
+  document.getElementById('order-total').textContent = '₹' + total;
+  document.getElementById('submit-btn').disabled = total === 0;
+}
+
+function handleShopPhoto(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const preview = document.getElementById('shop-preview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    analyzeShopPhoto(ev.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeShopPhoto(base64) {
+  const resultBox = document.getElementById('ai-shop-result');
+  const resultText = document.getElementById('ai-shop-text');
+  resultBox.style.display = 'block';
+  resultText.innerHTML = '<span class="spinner"></span> AI reading shop signboard...';
+
+  try {
+    const base64Data = base64.split(',')[1];
+    const mediaType = base64.split(';')[0].split(':')[1];
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            {type:'image',source:{type:'base64',media_type:mediaType,data:base64Data}},
+            {type:'text',text:'This is a photo of a retail shop front. Extract: 1) Shop name from signboard 2) Type of shop (kirana/medical/bakery/etc) 3) Any visible owner name. Return ONLY JSON like: {"shop_name":"...","shop_type":"...","owner_name":"...","confidence":"high/medium/low"}. If you cannot read clearly, make best guess with low confidence.'}
+          ]
+        }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content[0].text;
+    let parsed;
+    try { parsed = JSON.parse(txt.replace(/```json|```/g,'')); } catch(e) { parsed = null; }
+    if(parsed) {
+      resultText.innerHTML = `<b>🏪 ${parsed.shop_name || 'Unknown'}</b><br>Type: ${parsed.shop_type || '—'} &nbsp;|&nbsp; Owner: ${parsed.owner_name || '—'}<br><small style="color:var(--muted)">Confidence: ${parsed.confidence}</small>`;
+      if(parsed.shop_name) document.getElementById('shop-name').value = parsed.shop_name;
+      if(parsed.owner_name) document.getElementById('shop-owner').value = parsed.owner_name;
+    } else {
+      resultText.innerHTML = txt;
+    }
+  } catch(err) {
+    resultText.innerHTML = '⚠️ Could not read photo. Please fill details manually.';
+  }
+}
+
+function captureGPS() {
+  const status = document.getElementById('gps-status');
+  const coords = document.getElementById('gps-coords');
+  const dot = document.getElementById('gps-dot');
+  status.textContent = 'Getting location...';
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      currentGPS = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+      status.textContent = '📍 Location Captured';
+      coords.textContent = `${currentGPS.lat.toFixed(5)}, ${currentGPS.lng.toFixed(5)}`;
+      dot.classList.add('locked');
+    }, err => {
+      // Demo fallback
+      currentGPS = {lat: 19.1975 + Math.random()*0.01, lng: 72.9615 + Math.random()*0.01};
+      status.textContent = '📍 Location Captured (Demo)';
+      coords.textContent = `${currentGPS.lat.toFixed(5)}, ${currentGPS.lng.toFixed(5)}`;
+      dot.classList.add('locked');
+    });
+  } else {
+    currentGPS = {lat: 19.1975, lng: 72.9615};
+    status.textContent = '📍 Location Set (Demo)';
+    coords.textContent = `${currentGPS.lat.toFixed(5)}, ${currentGPS.lng.toFixed(5)}`;
+    dot.classList.add('locked');
+  }
+}
+
+function submitOrder() {
+  const brand = document.getElementById('rep-brand').value;
+  const shop = document.getElementById('shop-name').value || 'Unknown Shop';
+  const rep = document.getElementById('rep-name').value || 'Rep';
+  if(!brand) { showToast('Select a brand first'); return; }
+
+  const b = BRANDS[brand];
+  let items = [], total = 0;
+  b.skus.forEach(sku => {
+    if(orderCart[sku.id] > 0) {
+      items.push({name:sku.name, qty:orderCart[sku.id], price:sku.price});
+      total += sku.price * orderCart[sku.id];
+    }
+  });
+  if(items.length === 0) { showToast('Add at least one item'); return; }
+
+  const order = {
+    id: 'ORD' + (Date.now()+'').slice(-4),
+    shop, brand, brandName: b.name, rep, items, total,
+    status: 'pending',
+    zone: ['A','B','C','D'][Math.floor(Math.random()*4)],
+    time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    addr: currentGPS ? `GPS: ${currentGPS.lat.toFixed(4)}, ${currentGPS.lng.toFixed(4)}` : 'Address pending',
+    lat: currentGPS?.lat || 19.1975,
+    lng: currentGPS?.lng || 72.9615
+  };
+  MOCK_ORDERS.push(order);
+  showToast('✅ Order submitted! Invoice auto-generated.');
+
+  // Reset
+  orderCart = {};
+  document.getElementById('rep-brand').value = '';
+  document.getElementById('shop-name').value = '';
+  document.getElementById('shop-owner').value = '';
+  document.getElementById('order-summary-card').style.display = 'none';
+  document.getElementById('sku-card').style.display = 'none';
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('shop-preview').style.display = 'none';
+  document.getElementById('ai-shop-result').style.display = 'none';
+  document.getElementById('gps-dot').classList.remove('locked');
+  document.getElementById('gps-status').textContent = 'Waiting for GPS...';
+  document.getElementById('gps-coords').textContent = 'Tap button to capture';
+  currentGPS = null;
+}
+
+function renderStockView(filter) {
+  const list = document.getElementById('stock-list');
+  let html = '';
+  Object.entries(BRANDS).forEach(([key, brand]) => {
+    if(filter !== 'all' && filter !== key) return;
+    html += `<div class="card" style="border-left:3px solid ${brand.color}">
+      <div class="card-title" style="color:${brand.color}">${brand.name}</div>`;
+    brand.skus.forEach(sku => {
+      let cls, label;
+      if(sku.stock===0){cls='stock-out';label='OUT OF STOCK';}
+      else if(sku.stock<15){cls='stock-low';label='LOW STOCK';}
+      else{cls='stock-ok';label='OK';}
+      html += `<div class="sku-item">
+        <div style="flex:1"><div class="sku-name">${sku.name}</div><div style="font-size:12px;color:var(--muted)">₹${sku.price}/${sku.unit}</div></div>
+        <div style="text-align:right"><div class="stock-badge ${cls}">${label}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:4px">${sku.stock} units</div></div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderRepOrders() {
+  const list = document.getElementById('rep-orders-list');
+  if(MOCK_ORDERS.length === 0){list.innerHTML='<div style="color:var(--muted);text-align:center;padding:40px">No orders yet</div>';return;}
+  list.innerHTML = MOCK_ORDERS.map(o => `
+    <div class="order-item">
+      <div style="flex:1">
+        <div class="order-shop">${o.shop}</div>
+        <div class="order-meta">${o.brandName} · ${o.rep} · ${o.time}</div>
+        <div class="order-meta" style="margin-top:4px">${o.items.map(i=>`${i.name}×${i.qty}`).join(', ')}</div>
+        <div style="margin-top:6px"><span class="pill ${o.status==='pending'?'pill-pending':o.status==='dispatched'?'pill-dispatched':'pill-delivered'}">${o.status.toUpperCase()}</span></div>
+      </div>
+      <div class="order-amt">₹${o.total}</div>
+    </div>`).join('');
+}
+
+// ============================================================
+// OWNER
+// ============================================================
+function initOwner() {
+  const total = MOCK_ORDERS.reduce((s,o)=>s+o.total,0);
+  const collected = MOCK_ORDERS.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  document.getElementById('m-sales').textContent = '₹'+total.toLocaleString('en-IN');
+  document.getElementById('m-orders').textContent = MOCK_ORDERS.length;
+  document.getElementById('m-collected').textContent = '₹'+collected.toLocaleString('en-IN');
+  renderOwnerOrders();
+}
+
+function renderOwnerOrders() {
+  document.getElementById('owner-orders-list').innerHTML = MOCK_ORDERS.map(o => `
+    <div class="card" style="border-left:3px solid ${o.status==='delivered'?'var(--green)':o.status==='dispatched'?'var(--blue)':'var(--warn)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:15px">${o.shop}</div>
+          <div style="font-size:12px;color:var(--muted)">${o.id} · ${o.brandName} · Zone ${o.zone} · ${o.time}</div>
+          <div style="font-size:12px;margin-top:4px">${o.items.map(i=>`${i.name} ×${i.qty}`).join(' · ')}</div>
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <span class="pill ${o.status==='pending'?'pill-pending':o.status==='dispatched'?'pill-dispatched':'pill-delivered'}">${o.status.toUpperCase()}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent)">₹${o.total}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${o.addr}</div>
+          <button class="btn btn-secondary" style="margin-top:8px;padding:5px 12px;font-size:11px" onclick="updateStatus('${o.id}')">Update Status</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function updateStatus(id) {
+  const o = MOCK_ORDERS.find(x=>x.id===id);
+  if(!o) return;
+  const cycle = ['pending','dispatched','delivered'];
+  const next = cycle[(cycle.indexOf(o.status)+1)%cycle.length];
+  o.status = next;
+  showToast(`Order ${id} → ${next.toUpperCase()}`);
+  initOwner();
+}
+
+function renderBrandPerf() {
+  const brands = {};
+  MOCK_ORDERS.forEach(o => {
+    if(!brands[o.brand]) brands[o.brand] = {name:o.brandName,orders:0,revenue:0};
+    brands[o.brand].orders++;
+    brands[o.brand].revenue += o.total;
+  });
+  document.getElementById('brand-performance').innerHTML = Object.values(brands).map(b => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">${b.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${b.orders} orders today</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent)">₹${b.revenue.toLocaleString('en-IN')}</div>
+      </div>
+      <div style="margin-top:10px;background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
+        <div style="height:100%;background:var(--accent);width:${Math.min(100,b.revenue/50)}%;transition:width .5s"></div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--muted);padding:20px;text-align:center">No orders yet</div>';
+}
+
+function renderBillingPanel() {
+  const sel = document.getElementById('bill-order-select');
+  sel.innerHTML = MOCK_ORDERS.map(o=>`<option value="${o.id}">${o.id} — ${o.shop} (₹${o.total})</option>`).join('');
+}
+
+function generateBill() {
+  const id = document.getElementById('bill-order-select').value;
+  const o = MOCK_ORDERS.find(x=>x.id===id);
+  if(!o) return;
+  const invNum = 'INV-' + (orderInvoiceNum++);
+  const date = new Date().toLocaleDateString('en-IN');
+  let itemLines = o.items.map(i=>`<div class="bill-line"><span>${i.name} ×${i.qty}</span><span>₹${i.qty*i.price}</span></div>`).join('');
+  const gst = Math.round(o.total * 0.12);
+  const grand = o.total + gst;
+  document.getElementById('bill-content').innerHTML = `
+    <h3>DISTRIB-OS</h3>
+    <div class="bill-sub">Thane FMCG Distributors · GST: 27XXXXX1234X1Z5<br>${date} · ${invNum}</div>
+    <div class="bill-line"><span><b>BILL TO:</b> ${o.shop}</span></div>
+    <div style="margin-top:8px">${itemLines}</div>
+    <div class="bill-line"><span>Subtotal</span><span>₹${o.total}</span></div>
+    <div class="bill-line"><span>GST @12%</span><span>₹${gst}</span></div>
+    <div class="bill-total"><span>GRAND TOTAL</span><span>₹${grand}</span></div>
+    <div style="text-align:center;margin-top:8px;font-size:10px;color:#999">Pay via UPI: distrib@upi · Cash on Delivery</div>`;
+  document.getElementById('bill-output').style.display = 'block';
+  showToast('Invoice ' + invNum + ' generated!');
+}
+
+function renderOwnerStock() {
+  let html = '';
+  Object.entries(BRANDS).forEach(([key, brand]) => {
+    html += `<div class="card">
+      <div class="card-title">${brand.name}</div>`;
+    brand.skus.forEach(sku => {
+      let cls = sku.stock===0?'stock-out':sku.stock<15?'stock-low':'stock-ok';
+      const pct = Math.min(100, (sku.stock/200)*100);
+      html += `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span>${sku.name}</span>
+          <span class="stock-badge ${cls}">${sku.stock} units</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:5px;margin-top:6px;overflow:hidden">
+          <div style="height:100%;background:${sku.stock===0?'var(--danger)':sku.stock<15?'var(--warn)':'var(--green)'};width:${pct}%;transition:width .5s"></div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('owner-stock-list').innerHTML = html;
+}
+
+// ============================================================
+// DRIVER
+// ============================================================
+function initDriver() {
+  document.getElementById('driver-stops').innerHTML = DRIVER_STOPS.map(s => `
+    <div class="stop-item">
+      <div class="stop-num ${s.done?'done':s.current?'current':''}">${s.done?'✓':s.num}</div>
+      <div class="stop-info" style="opacity:${s.done?0.5:1}">
+        <div class="stop-shop">${s.shop}</div>
+        <div class="stop-addr">${s.addr}</div>
+        <div class="stop-items">${s.items}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="stop-amt">${s.amt}</div>
+        ${s.current ? `<button class="btn btn-primary" style="margin-top:6px;padding:6px 12px;font-size:12px" onclick="markDelivered(${s.num})">✅ Delivered</button>` : ''}
+        ${!s.done && !s.current ? `<button class="btn btn-secondary" style="margin-top:6px;padding:6px 12px;font-size:12px" onclick="openMapsStop('${s.addr}')">🗺️ Navigate</button>` : ''}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('collection-log').innerHTML = DRIVER_STOPS.filter(s=>s.done||s.current).map(s=>`
+    <div class="collection-row">
+      <span>${s.shop}</span>
+      <div style="text-align:right">
+        <span style="font-family:'IBM Plex Mono',monospace;font-weight:600">${s.amt}</span><br>
+        <span style="font-size:11px;color:var(--muted)">${s.done?'✅ Collected':'🟡 Pending'}</span>
+      </div>
+    </div>`).join('');
+}
+
+function markDelivered(num) {
+  const stop = DRIVER_STOPS.find(s=>s.num===num);
+  if(stop) { stop.done=true; stop.current=false; }
+  const next = DRIVER_STOPS.find(s=>!s.done && !s.current);
+  if(next) next.current = true;
+  showToast('✅ Delivery confirmed + photo saved');
+  initDriver();
+}
+
+function openMapsStop(addr) {
+  window.open(`https://maps.google.com/?q=${encodeURIComponent(addr+' Thane Maharashtra')}`, '_blank');
+}
+
+// ============================================================
+// ROUTE
+// ============================================================
+function initRoute() {
+  // just ensure compare tab is visible
+}
+
+function renderLiveRoute() {
+  const zones = {
+    'Zone A — Thane West': [{shop:'Krishna Kirana',addr:'Naupada Rd'},{shop:'Sharma General',addr:'Naupada Main'},{shop:'Bala Stores',addr:'Ghantali'},{shop:'New India',addr:'Kopri'}],
+    'Zone B — Thane East': [{shop:'Patel Kirana',addr:'Kalwa'},{shop:'Sunrise Stores',addr:'Mumbra'},{shop:'City Mart',addr:'Diva'}],
+    'Zone C — Ghodbunder': [{shop:'Meena Supermart',addr:'Majiwada'},{shop:'Royal Kirana',addr:'Brahmand'},{shop:'Quick Shop',addr:'Kapurbawdi'}],
+    'Zone D — Wagle': [{shop:'National Stores',addr:'Wagle Estate'},{shop:'Om Traders',addr:'Balkum'},{shop:'Shiv Kirana',addr:'Kolshet'}],
+  };
+  const colors = ['#00d4aa','#ff6b35','#4361ee','#ffd166'];
+  document.getElementById('zone-routes').innerHTML = Object.entries(zones).map(([zone, stops], i) => `
+    <div class="card" style="border-left:3px solid ${colors[i]};margin-bottom:10px">
+      <div style="font-weight:700;color:${colors[i]};margin-bottom:8px">EV ${i+1} — ${zone}</div>
+      ${stops.map((s,j)=>`<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-right:8px">${String(j+1).padStart(2,'0')}</span>${s.shop} <span style="color:var(--muted)">· ${s.addr}</span></div>`).join('')}
+      <button class="btn btn-secondary" style="margin-top:10px;padding:6px 14px;font-size:12px;width:100%;justify-content:center" onclick="openZoneInMaps(${i})">🗺️ Open in Google Maps</button>
+    </div>`).join('');
+}
+
+function openZoneInMaps(zone) {
+  const coords = [
+    '19.1975,72.9615|19.2015,72.9640|19.1985,72.9580',
+    '19.1780,73.0010|19.1820,73.0050',
+    '19.2310,72.9780|19.2280,72.9760',
+    '19.1910,72.9720|19.1950,72.9700'
+  ];
+  showToast('Opening Google Maps with optimized route for Zone ' + ['A','B','C','D'][zone]);
+  window.open(`https://www.google.com/maps/dir/${coords[zone].split('|').join('/')}`, '_blank');
+}
+
+function sendToDrivers() {
+  showToast('📲 Routes pushed to all 4 drivers via app');
+}
+
+async function aiOptimizeRoute() {
+  const input = document.getElementById('addr-input').value.trim();
+  if(!input) { showToast('Paste some addresses first'); return; }
+  const btn = document.getElementById('optimize-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Clustering...';
+  const result = document.getElementById('optimize-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="ai-box"><div class="ai-label">⚡ AI Processing</div><span class="spinner"></span> Clustering addresses into zones...</div>';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: `You are a route optimizer for a Thane, Maharashtra FMCG distributor with 4 delivery zones: Zone A (Thane West - Naupada/Kopri/Ghantali), Zone B (Thane East - Kalwa/Mumbra/Diva), Zone C (Ghodbunder - Manpada/Majiwada/Brahmand), Zone D (Wagle Estate/Kolshet/Balkum).
+
+Cluster these delivery addresses into the 4 zones and suggest delivery order for each zone:
+${input}
+
+Respond ONLY in JSON: {"zones":{"A":[{"shop":"...","addr":"..."}],"B":[...],"C":[...],"D":[...]}, "total_stops": N, "recommendation": "one line tip"}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content[0].text;
+    let parsed;
+    try { parsed = JSON.parse(txt.replace(/```json|```/g,'').trim()); } catch(e) { parsed = null; }
+    if(parsed && parsed.zones) {
+      const colors = {A:'#00d4aa',B:'#ff6b35',C:'#4361ee',D:'#ffd166'};
+      result.innerHTML = `<div class="ai-box">
+        <div class="ai-label">⚡ AI Clustered — ${parsed.total_stops} stops across 4 zones</div>
+        <div style="margin-bottom:8px;font-size:13px;color:var(--warn)">💡 ${parsed.recommendation}</div>
+        ${Object.entries(parsed.zones).map(([zone, stops])=>`
+          <div style="margin-bottom:10px">
+            <div style="font-weight:700;color:${colors[zone]};margin-bottom:4px">Zone ${zone} — ${stops.length} stops</div>
+            ${stops.map((s,i)=>`<div style="font-size:12px;padding:3px 0;color:var(--muted)">${i+1}. ${s.shop||s.addr}</div>`).join('')}
+          </div>`).join('')}
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="showToast('Routes sent to Google Maps!')">🗺️ Generate Maps Links</button>
+      </div>`;
+    } else {
+      result.innerHTML = `<div class="ai-box"><div class="ai-label">⚡ AI Response</div>${txt}</div>`;
+    }
+  } catch(err) {
+    result.innerHTML = '<div class="ai-box" style="border-color:var(--danger)">⚠️ API error. Check connection.</div>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '⚡ AI Cluster & Optimize';
+}
+
+function openMapsRoute() {
+  const waypoints = DRIVER_STOPS.map(s => encodeURIComponent(s.addr + ' Thane')).join('/');
+  window.open(`https://www.google.com/maps/dir/${waypoints}`, '_blank');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// Init
+renderStockView('all');
+initDriver();
+</script>
+</body>
+</html>
