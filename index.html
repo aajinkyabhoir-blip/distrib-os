@@ -1,0 +1,3143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<title>DistribOS — Thane FMCG</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DistribOS">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text y='.9em' font-size='70' x='12'>📦</text></svg>">
+<style>
+/* ============================================================
+   DESIGN TOKENS
+============================================================ */
+:root {
+  --bg:#f1f5f9; --surface:#ffffff; --surface2:#f8fafc; --border:#e2e8f0;
+  --accent:#2563eb; --accent2:#f97316; --green:#059669; --warn:#d97706;
+  --danger:#dc2626; --purple:#7c3aed; --ink:#0f172a; --muted:#64748b;
+  --text:#1e293b; --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;position:fixed;width:100%}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+
+/* ============================================================
+   LOGIN
+============================================================ */
+#login-wrap{position:fixed;inset:0;background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 60%,#0f172a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:1000;overflow-y:auto}
+.login-brand{text-align:center;margin-bottom:28px}
+.login-brand .logo{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:#fff;letter-spacing:-1px}
+.login-brand .logo span{color:#38bdf8}
+.login-brand .tagline{font-size:13px;color:rgba(255,255,255,.4);margin-top:4px}
+.login-card{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.login-card h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:16px;color:var(--ink);text-align:center}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.lf input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:16px;outline:none;color:var(--ink);transition:border .2s;font-family:'IBM Plex Sans',sans-serif}
+.lf input:focus{border-color:var(--accent)}
+.pin-row{display:flex;justify-content:center;gap:10px;margin:12px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;transition:all .2s}
+.pin-dot.f{background:var(--accent);border-color:var(--accent)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.kbtn{padding:15px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--ink);font-size:22px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;user-select:none}
+.kbtn:active{background:var(--accent);color:#fff;transform:scale(.93)}
+.kbtn.sm{font-size:13px;color:var(--muted)}
+#lerr{color:var(--danger);font-size:12px;text-align:center;min-height:16px;margin-bottom:6px}
+.demo-hint{margin-top:18px;font-size:11px;color:rgba(255,255,255,.35);text-align:center;line-height:1.8;font-family:'IBM Plex Mono',monospace}
+
+/* ============================================================
+   APP SHELL
+============================================================ */
+#app{display:none;height:100vh;flex-direction:column}
+.app-top{background:#fff;border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow);position:relative;z-index:50}
+.app-logo{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent)}
+.app-logo span{color:var(--accent2)}
+.user-pill{display:flex;align-items:center;gap:7px;background:var(--surface2);border-radius:20px;padding:5px 12px;border:1px solid var(--border)}
+.u-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+.u-name{font-size:12px;font-weight:600;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-role{font-size:10px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.icon-btn{background:none;border:none;cursor:pointer;padding:4px;font-size:18px;color:var(--muted)}
+
+/* SCROLL AREA */
+.scroll-wrap{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.scroll-wrap::-webkit-scrollbar{width:0}
+/* Ensure focused inputs scroll into view above keyboard */
+input:focus,select:focus,textarea:focus{scroll-margin-top:80px;scroll-margin-bottom:20px}
+.page{display:none;padding:14px 14px 80px}
+.page.active{display:block}
+
+/* BOTTOM NAV */
+.bottom-nav{background:#fff;border-top:1px solid var(--border);display:flex;flex-shrink:0;box-shadow:0 -1px 8px rgba(0,0,0,.06);padding-bottom:env(safe-area-inset-bottom)}
+.bnav{flex:1;padding:10px 4px;text-align:center;cursor:pointer;font-size:9.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);transition:all .2s;position:relative;font-family:'IBM Plex Mono',monospace;user-select:none}
+.bnav .bi{font-size:21px;display:block;margin-bottom:2px}
+.bnav.on{color:var(--accent)}
+.bnav.on::after{content:'';position:absolute;top:0;left:20%;right:20%;height:2.5px;background:var(--accent);border-radius:0 0 3px 3px}
+.nbadge{position:absolute;top:6px;right:18%;background:var(--danger);color:#fff;border-radius:8px;padding:1px 5px;font-size:9px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+
+/* ============================================================
+   COMMON UI COMPONENTS
+============================================================ */
+/* Cards */
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.c-accent{border-left:3px solid var(--accent)}
+.c-green{border-left:3px solid var(--green)}
+.c-warn{border-left:3px solid var(--warn)}
+.c-danger{border-left:3px solid var(--danger)}
+.c-purple{border-left:3px solid var(--purple)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;transition:all .2s;user-select:none;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-warn{background:var(--warn);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-block{width:100%;margin-bottom:8px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:8px}
+
+/* Form fields */
+.field{margin-bottom:14px}
+.field label,.fl{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-family:'IBM Plex Sans',sans-serif;font-size:16px;outline:none;transition:border .2s;background:#fff;color:var(--ink)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+
+/* Sub tabs */
+.stabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.stabs::-webkit-scrollbar{display:none}
+.stab{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);white-space:nowrap;transition:all .2s;background:#fff;user-select:none}
+.stab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Status badges */
+.sbadge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.sb-pending{background:#fef3c7;color:#92400e}
+.sb-billed{background:#ede9fe;color:#6d28d9}
+.sb-dispatched{background:#dbeafe;color:#1d4ed8}
+.sb-delivered{background:#d1fae5;color:#065f46}
+.sb-return{background:#fee2e2;color:#991b1b}
+
+/* Stock badges */
+.sk-ok{background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.sk-low{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.sk-out{background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+
+/* Metrics grid */
+.mg{display:grid;gap:10px;margin-bottom:14px}
+.mg-2{grid-template-columns:1fr 1fr}
+.mg-3{grid-template-columns:repeat(3,1fr)}
+.mg-4{grid-template-columns:repeat(4,1fr)}
+.mtile{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+.mtile-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;margin-bottom:2px}
+.mtile-lab{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* Progress bar */
+.pbar{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;margin-top:6px}
+.pfill{height:100%;border-radius:4px;transition:width .5s}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:12px 0}
+
+/* Row layout */
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.row:last-child{border:none}
+
+/* GPS box */
+.gps-box{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px}
+.gps-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);flex-shrink:0}
+.gps-dot.on{background:var(--green);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.gps-dot.seeking{animation:blink 1s infinite}
+.coord-row{display:flex;gap:8px;margin-top:8px}
+.coord-chip{flex:1;background:#fff;border:1.5px solid var(--accent);border-radius:8px;padding:7px;text-align:center}
+.coord-chip .cl{font-size:9px;color:var(--accent);font-family:'IBM Plex Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.coord-chip .cv{font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace;margin-top:2px}
+
+/* Photo zone */
+.photo-zone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.photo-zone:active{border-color:var(--accent);background:#eff6ff}
+.photo-zone .pz-icon{font-size:32px;margin-bottom:6px}
+.photo-zone .pz-text{font-size:13px;color:var(--muted)}
+#shop-preview{max-width:100%;border-radius:10px;margin-top:10px;display:none}
+
+/* AI result box */
+.ai-box{background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(124,58,237,.05));border:1px solid rgba(37,99,235,.25);border-radius:10px;padding:13px;margin-top:10px;font-size:13px;line-height:1.6;display:none}
+.ai-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;font-weight:600}
+
+/* SKU item */
+.sku-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.sku-row:last-child{border:none}
+.sku-info{flex:1;min-width:0}
+.sku-name{font-weight:600;font-size:14px}
+.sku-meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qty-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.qbtn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-weight:700;transition:all .15s;user-select:none}
+.qbtn:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.qbtn:disabled{opacity:.35;cursor:not-allowed}
+.qval{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;min-width:28px;text-align:center}
+
+/* Order card */
+.ord-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.ord-shop{font-weight:700;font-size:15px}
+.ord-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.ord-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.och{background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;border:1px solid var(--border)}
+
+/* Driver stop */
+.stop-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.stop-row:last-child{border:none}
+.stop-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;margin-top:2px;color:#fff}
+.stop-info{flex:1;min-width:0}
+.stop-shop{font-weight:700;font-size:14px}
+.stop-addr{font-size:12px;color:var(--muted);margin-top:2px}
+.stop-items{font-size:12px;color:var(--accent);margin-top:3px}
+.stop-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+/* Dispatch step indicator */
+.dsteps{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;background:#fff}
+.dstep{flex:1;padding:10px 6px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;transition:all .3s;border-right:1px solid var(--border)}
+.dstep:last-child{border:none}
+.dstep.done{background:var(--green);color:#fff}
+.dstep.active{background:var(--accent);color:#fff}
+.dstep .ds-icon{font-size:18px;display:block;margin-bottom:3px}
+
+/* Balance meter */
+.bal-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.bal-name{width:28px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.bal-bar-wrap{flex:1}
+.bal-val{font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;text-align:right;min-width:80px}
+.bal-ok{font-size:10px;color:var(--green);font-weight:700}
+.bal-warn{font-size:10px;color:var(--warn);font-weight:700}
+
+/* Dispatch driver card */
+.dcard{background:#fff;border:1.5px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.dcard-head{padding:14px;display:flex;align-items:center;gap:10px}
+.d-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
+.dcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 14px 12px}
+.dstat{background:var(--surface2);border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)}
+.dstat-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.dstat-lab{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.dcard-stops{padding:0 14px 14px}
+.dstop{display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border-radius:8px;margin-bottom:4px;border-left:3px solid transparent}
+
+/* Print styles */
+@media print{
+  #app,#login-wrap{display:none!important}
+  #print-area{display:block!important}
+  .print-page{page-break-after:always}
+}
+#print-area{display:none}
+.pbill{width:76mm;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3mm;border-bottom:1.5px dashed #aaa;page-break-after:always}
+.pbill-head{text-align:center;margin-bottom:6px}
+.pbill-head h4{font-size:13px;font-weight:700}
+.pbill-head p{font-size:9px;color:#555;margin-top:2px}
+.pline{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dotted #ddd;font-size:11px}
+.ptotal{display:flex;justify-content:space-between;font-weight:700;font-size:13px;border-top:2px solid #000;padding:4px 0;margin-top:3px}
+.pfoot{text-align:center;font-size:9px;color:#888;margin-top:6px}
+.pload{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4mm;page-break-after:always}
+.pload-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.pload-sub{font-size:10px;color:#555;margin-bottom:8px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end}
+.modal-bg.hidden{display:none}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:88vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:14px;color:var(--ink)}
+.modal-close{float:right;background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;line-height:1;padding:0}
+
+/* Toast */
+.field-invalid{border-color:var(--danger)!important;background:#fff5f5!important}
+.val-err{color:var(--danger);font-size:12px;margin-top:4px;font-weight:600;display:block}
+.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:10px;font-weight:600;font-size:13px;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-md);max-width:85vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Spinner */
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes popIn{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes slideUp{0%{transform:translateY(30px);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+/* Section header */
+.sec-hdr{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between}
+
+/* Table */
+.rtable{width:100%;border-collapse:collapse;font-size:12px}
+.rtable th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace}
+.rtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.rtable tr:nth-child(even) td{background:var(--surface2)}
+
+/* Toggle */
+.toggle-wrap{display:flex;justify-content:space-between;align-items:center;padding:9px 0}
+.tog{width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--accent)}
+.tog.off{background:#cbd5e1}
+.tog::after{content:'';position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tog.on::after{left:21px}
+.tog.off::after{left:3px}
+
+/* Inward scan */
+.scan-box{border:2.5px dashed var(--accent);border-radius:14px;padding:22px;text-align:center;background:linear-gradient(135deg,rgba(37,99,235,.04),rgba(37,99,235,.01))}
+.scan-code{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:4px;margin:8px 0}
+
+/* Loader pick */
+.pick-item{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;transition:all .2s}
+.pick-item.picked{background:#f0fdf4;border-color:#86efac}
+.pick-check{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0}
+.pick-check.checked{background:var(--green);border-color:var(--green);color:#fff}
+
+/* Returns */
+.ret-item{background:#fff;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-bottom:8px}
+
+/* Change PIN modal link */
+.pin-link{text-align:center;font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;margin-top:6px}
+
+/* Cutoff banner */
+.cutoff-banner{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.cutoff-banner.open{background:linear-gradient(135deg,#059669,#047857)}
+.cb-icon{font-size:24px;flex-shrink:0}
+.cb-title{font-weight:700;font-size:14px}
+.cb-sub{font-size:12px;opacity:.85;margin-top:1px}
+
+/* Live clock */
+#live-clock{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--surface2);padding:4px 10px;border-radius:8px;border:1px solid var(--border);color:var(--muted)}
+
+@media(max-width:360px){.mg-4{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ LOGIN ============================================================ -->
+<div id="login-wrap">
+  <div class="login-brand">
+    <div class="logo">Distrib<span>OS</span></div>
+    <div class="tagline">Thane FMCG Distribution Platform</div>
+  </div>
+  <div class="login-card">
+    <h3>Sign In</h3>
+
+    <div class="lf"><label>Mobile Number</label><input type="tel" id="l-mob" maxlength="10" placeholder="10-digit mobile" oninput="this.value=this.value.replace(/\D/g,'')"/></div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px">Enter 6-digit PIN</div>
+    <div class="pin-row" id="pin-row">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="keypad">
+      <div class="kbtn" onclick="kp('1')">1</div><div class="kbtn" onclick="kp('2')">2</div><div class="kbtn" onclick="kp('3')">3</div>
+      <div class="kbtn" onclick="kp('4')">4</div><div class="kbtn" onclick="kp('5')">5</div><div class="kbtn" onclick="kp('6')">6</div>
+      <div class="kbtn" onclick="kp('7')">7</div><div class="kbtn" onclick="kp('8')">8</div><div class="kbtn" onclick="kp('9')">9</div>
+      <div class="kbtn sm" onclick="kp('clr')">CLR</div><div class="kbtn" onclick="kp('0')">0</div><div class="kbtn sm" onclick="kp('del')">⌫</div>
+    </div>
+    <div id="lerr"></div>
+    <div class="pin-link" onclick="showModal('pin-change-modal')">Forgot / Change PIN</div>
+  </div>
+  <div class="demo-hint">
+    Owner: 9999999990 · PIN 000000<br>
+    Rep (Derby+CrunchCo): 9999999991 · PIN 111111<br>
+    Rep (FreshGlo+Health): 9999999993 · PIN 333333<br>
+    Driver 1: 9999999992 · PIN 222222<br>
+    Loader: 9999999995 · PIN 555555
+  </div>
+</div>
+
+<!-- ============================================================ APP SHELL ============================================================ -->
+<div id="app" style="display:none;height:100vh;flex-direction:column">
+  <div class="app-top">
+    <div class="app-logo">Distrib<span>OS</span></div>
+    <div class="hdr-right">
+      <div id="live-clock">00:00 IST</div>
+      <div class="user-pill">
+        <div class="u-avatar" id="ua"></div>
+        <div><div class="u-name" id="un">—</div><div class="u-role" id="ur">—</div></div>
+      </div>
+      <button class="icon-btn" onclick="showApiKeyModal()" title="Settings">⚙️</button>
+      <button class="icon-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+  <div class="scroll-wrap" id="scroll-wrap">
+    <!-- PAGES INJECTED HERE -->
+    <div id="page-owner" class="page"></div>
+    <div id="page-sales" class="page"></div>
+    <div id="page-driver" class="page"></div>
+    <div id="page-loader" class="page"></div>
+  </div>
+  <div class="bottom-nav" id="bottom-nav"></div>
+</div>
+
+<!-- PRINT AREA -->
+<div id="print-area"></div>
+
+<!-- API KEY MODAL -->
+<div id="apikey-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('apikey-modal')">×</button>
+    <div class="modal-title">⚙️ App Settings</div>
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
+      <b>Required for AI shop reading.</b> Paste your Anthropic API key below. It is stored only on this device (localStorage) and never sent anywhere except Anthropic's API.
+    </div>
+    <div class="lf">
+      <label>Anthropic API Key</label>
+      <input type="password" id="apikey-input" placeholder="sk-ant-api03-..." style="font-family:monospace;font-size:13px"/>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">
+      Get your key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a> → API Keys → Create Key
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:12px;margin-bottom:14px;color:var(--blue)">
+      <b>Cross-device sync:</b> See Firebase setup guide — tap below. Free forever on Spark plan.
+      <div style="margin-top:6px"><a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent);font-weight:600">→ Open Firebase Console</a></div>
+    </div>
+    <div class="lf" style="margin-top:8px">
+      <label>Routific API Key (for route optimization)</label>
+      <input type="password" id="routific-key-input" placeholder="Your Routific API key" style="font-family:monospace;font-size:13px"/>
+    </div>
+    <button class="btn btn-ghost btn-block" onclick="saveRoutificKey()" style="margin-bottom:8px">💾 Save Routific Key</button>
+    <button class="btn btn-primary btn-block" onclick="saveApiKey()">💾 Save API Key</button>
+    <div id="apikey-status" style="font-size:12px;text-align:center;margin-top:8px;color:var(--green)"></div>
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px">Other Settings</div>
+    <div class="toggle-wrap" style="padding:8px 0">
+      <span style="font-size:13px">Haptic Feedback</span>
+      <button class="tog on" id="tog-haptic" onclick="toggleHaptic(this)"></button>
+    </div>
+    <div class="toggle-wrap" style="padding:8px 0">
+      <span style="font-size:13px">Sound on Order Submit</span>
+      <button class="tog off" id="tog-sound" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+    </div>
+    <div class="toggle-wrap" style="padding:8px 0;border-top:1px solid var(--border);margin-top:6px">
+      <div>
+        <div style="font-size:13px;font-weight:600">🧪 Test Mode</div>
+        <div style="font-size:11px;color:var(--muted)">Skip photo &amp; GPS for testing in office</div>
+      </div>
+      <button class="tog ${LS.get('test_mode',false)?'on':'off'}" id="tog-test" onclick="toggleTestMode(this)"></button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT DOWNLOAD MODAL -->
+<div id="report-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('report-modal')">×</button>
+    <div class="modal-title">📊 Download Report</div>
+    <div class="lf"><label>From Date</label><input type="date" id="rp-from"/></div>
+    <div class="lf"><label>To Date</label><input type="date" id="rp-to"/></div>
+    <div class="lf">
+      <label>Brand Filter</label>
+      <select id="rp-brand" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:16px;background:#fff;outline:none">
+        <option value="">All Brands</option>
+      </select>
+    </div>
+    <div class="lf">
+      <label>Report For</label>
+      <select id="rp-who" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:16px;background:#fff;outline:none">
+        <option value="me">My Orders Only</option>
+        <option value="all">All Reps (Owner only)</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="downloadReport()">⬇️ Download CSV Report</button>
+    <button class="btn btn-ghost btn-block" onclick="previewReport()">👁️ Preview Report</button>
+    <div id="rp-preview" style="display:none;margin-top:12px;overflow-x:auto"></div>
+  </div>
+</div>
+
+<!-- ============================================================ MODALS ============================================================ -->
+<!-- Order Detail -->
+<div id="order-detail-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('order-detail-modal')">×</button>
+    <div class="modal-title">Order Detail</div>
+    <div id="odm-content"></div>
+  </div>
+</div>
+<!-- Edit Order -->
+<div id="edit-order-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('edit-order-modal')">×</button>
+    <div class="modal-title">Edit Order</div>
+    <div id="eom-content"></div>
+    <button class="btn btn-primary btn-block" onclick="saveEditOrder()">💾 Save Changes</button>
+  </div>
+</div>
+<!-- Delivery Confirm -->
+<div id="delivery-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('delivery-modal')">×</button>
+    <div class="modal-title">Confirm Delivery</div>
+    <div id="dm-content"></div>
+  </div>
+</div>
+<!-- Cash Handover -->
+<div id="cash-modal" class="modal-bg hidden">
+  <div class="modal-sheet">
+    <div class="modal-title">💰 Cash Handover</div>
+    <div id="cash-modal-content"></div>
+    <button class="btn btn-success btn-block" onclick="confirmHandover()">✅ Confirm Handover</button>
+    <button class="btn btn-ghost btn-block" onclick="closeModal('cash-modal')">Cancel</button>
+  </div>
+</div>
+<!-- PIN Change -->
+<div id="pin-change-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('pin-change-modal')">×</button>
+    <div class="modal-title">Change PIN</div>
+    <div class="lf"><label>Mobile</label><input type="tel" id="cp-mob" maxlength="10"/></div>
+    <div class="lf"><label>Current PIN</label><input type="password" id="cp-old" maxlength="6" placeholder="6 digits"/></div>
+    <div class="lf"><label>New PIN</label><input type="password" id="cp-new" maxlength="6" placeholder="6 digits"/></div>
+    <div class="lf"><label>Confirm New PIN</label><input type="password" id="cp-conf" maxlength="6" placeholder="6 digits"/></div>
+    <button class="btn btn-primary btn-block" onclick="doChangePin()">✅ Update PIN</button>
+    <div id="cp-err" style="color:var(--danger);font-size:12px;text-align:center;margin-top:6px"></div>
+  </div>
+</div>
+<!-- Member Edit -->
+<div id="member-modal" class="modal-bg hidden" onclick="closeMBG(this)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('member-modal')">×</button>
+    <div class="modal-title" id="mm-title">Edit Member</div>
+    <div id="mm-content"></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBfSR7OItS7aBvAfRDEb0wl1XJeS-nhVes",
+  authDomain: "distribos-thane.firebaseapp.com",
+  projectId: "distribos-thane",
+  storageBucket: "distribos-thane.firebasestorage.app",
+  messagingSenderId: "273501452522",
+  appId: "1:273501452522:web:6b5fe7edb46f92a8723f93",
+  measurementId: "G-F99CBQRFB1"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Override LS to sync with Firebase
+const origSet = localStorage.setItem;
+const origGet = localStorage.getItem;
+
+window.FB = {
+  async set(key, value){
+    try{
+      await db.collection('distribos').doc(key).set({data:value});
+    }catch(e){console.log('FB set error',e);}
+  },
+  async get(key){
+    try{
+      const doc = await db.collection('distribos').doc(key).get();
+      return doc.exists ? doc.data().data : null;
+    }catch(e){console.log('FB get error',e); return null;}
+  }
+};
+</script>
+<script>
+// PWA Service Worker Registration
+// Ensure data is seeded immediately on page load
+document.addEventListener('DOMContentLoaded', function(){
+  seedData();
+});
+
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+<script>
+// ============================================================
+// DATA STORE  (localStorage-backed, swap keys to Firebase later)
+// ============================================================
+const LS = {
+  get:(k,d)=>{try{const v=localStorage.getItem('dos_'+k); if(v) return JSON.parse(v);
+FB.get('dos_'+k).then(data=>{ if(data){ localStorage.setItem('dos_'+k,JSON.stringify(data)); location.reload(); }});
+return d}catch{return d}},
+  set:(k,v)=>{try{localStorage.setItem('dos_'+k,JSON.stringify(v)); FB.set('dos_'+k,v);}catch{}},
+};
+
+// SEED default data if first run
+function seedData(){
+  // Only seed if truly first run — check each key independently
+  // so existing orders are NEVER overwritten
+  if(LS.get('users_seeded')&&LS.get('brands_seeded')) return;
+  LS.set('users',{
+    '9999999990':{name:'Ajinkya Bhoir',role:'owner',pin:'000000',brands:['derby','healthbite','freshglo','crunchco'],color:'#2563eb'},
+    '9999999991':{name:'Sujeet Gupta',role:'rep',pin:'111111',brands:['derby','crunchco'],color:'#059669',lastLat:19.1975,lastLng:72.9615,lastSeen:''},
+    '9999999993':{name:'Priya Sharma',role:'rep',pin:'333333',brands:['freshglo','healthbite'],color:'#7c3aed',lastLat:19.231,lastLng:72.978,lastSeen:''},
+    '9999999992':{name:'Ravi Kumar',role:'driver',pin:'222222',brands:[],zone:'A',canDrive:true,color:'#f97316'},
+    '9999999994':{name:'Suresh Patil',role:'driver',pin:'444444',brands:[],zone:'B',canDrive:true,color:'#059669'},
+    '9999999996':{name:'Manoj Singh',role:'driver',pin:'666666',brands:[],zone:'C',canDrive:true,color:'#7c3aed'},
+    '9999999995':{name:'Anil Waghmare',role:'loader',pin:'555555',brands:[],canDrive:true,color:'#dc2626'},
+  });
+  if(!LS.get('brands_seeded')){LS.set('brands_seeded',true);LS.set('brands',{
+    derby:{name:'Derby Confectionery',color:'#f97316',icon:'🍬',skus:[
+      {id:'D1',name:'Timbuktu',price:20,unit:'pkt',stock:142,barcode:'8901234500011'},
+      {id:'D2',name:'Happy Birthday Eclairs',price:20,unit:'pkt',stock:67,barcode:'8901234500028'},
+      {id:'D3',name:'Crunchiz Eclairs',price:20,unit:'pkt',stock:8,barcode:'8901234500035'},
+      {id:'D4',name:'Milk Eclairs',price:20,unit:'pkt',stock:0,barcode:'8901234500042'},
+      {id:'D5',name:'Coffee Bite',price:25,unit:'pkt',stock:203,barcode:'8901234500059'},
+      {id:'D6',name:'Mango Bite',price:20,unit:'pkt',stock:88,barcode:'8901234500066'},
+    ]},
+    healthbite:{name:'HealthBite Protein',color:'#059669',icon:'💪',skus:[
+      {id:'H1',name:'Choco Fudge Bar 6pk',price:300,unit:'box',stock:45,barcode:'8902345600011'},
+      {id:'H2',name:'Peanut Crunch 6pk',price:300,unit:'box',stock:12,barcode:'8902345600028'},
+      {id:'H3',name:'Vanilla Almond 6pk',price:300,unit:'box',stock:0,barcode:'8902345600035'},
+      {id:'H4',name:'Oats & Honey Bar',price:45,unit:'pcs',stock:120,barcode:'8902345600042'},
+    ]},
+    freshglo:{name:'FreshGlo Personal Care',color:'#2563eb',icon:'✨',skus:[
+      {id:'F1',name:'Vitamin C Serum 30ml',price:349,unit:'pcs',stock:78,barcode:'8903456700011'},
+      {id:'F2',name:'Niacinamide Toner',price:299,unit:'pcs',stock:34,barcode:'8903456700028'},
+      {id:'F3',name:'SPF 50 Sunscreen',price:249,unit:'pcs',stock:6,barcode:'8903456700035'},
+      {id:'F4',name:'Hydrating Face Wash',price:199,unit:'pcs',stock:55,barcode:'8903456700042'},
+    ]},
+    crunchco:{name:'CrunchCo Snacks',color:'#d97706',icon:'🫙',skus:[
+      {id:'C1',name:'Masala Munchies Jar',price:250,unit:'jar',stock:55,barcode:'8904567800011'},
+      {id:'C2',name:'Cheese Puffs Jar',price:250,unit:'jar',stock:23,barcode:'8904567800028'},
+      {id:'C3',name:'Spicy Mix Jar',price:280,unit:'jar',stock:89,barcode:'8904567800035'},
+    ]},
+  });}
+  const now=new Date();
+  if(!LS.get('orders_seeded')){LS.set('orders_seeded',true);LS.set('orders',[
+    {id:'ORD001',shop:'Sharma General Store',shopType:'Kirana',brand:'derby',brandName:'Derby Confectionery',rep:'Sujeet Gupta',repMob:'9999999991',items:[{id:'D1',name:'Timbuktu',qty:5,price:20},{id:'D2',name:'Happy Birthday Eclairs',qty:3,price:20},{id:'D5',name:'Coffee Bite',qty:4,price:25}],total:260,status:'pending',assignedDriver:'',routeSeq:0,ts:new Date(now-3600000).toISOString(),addr:'Naupada, Thane West',lat:19.197,lng:72.961,gst:'',shopPhoto:''},
+    {id:'ORD002',shop:'Patel Kirana',shopType:'Kirana',brand:'healthbite',brandName:'HealthBite Protein',rep:'Priya Sharma',repMob:'9999999993',items:[{id:'H1',name:'Choco Fudge Bar 6pk',qty:2,price:300},{id:'H4',name:'Oats & Honey Bar',qty:10,price:45}],total:1050,status:'pending',assignedDriver:'',routeSeq:0,ts:new Date(now-3200000).toISOString(),addr:'Kalwa, Thane East',lat:19.178,lng:73.001,gst:'27BBBBB1234B1Z6',shopPhoto:''},
+    {id:'ORD003',shop:'Meena Supermart',shopType:'Supermarket',brand:'freshglo',brandName:'FreshGlo Personal Care',rep:'Priya Sharma',repMob:'9999999993',items:[{id:'F1',name:'Vitamin C Serum 30ml',qty:3,price:349},{id:'F4',name:'Hydrating Face Wash',qty:5,price:199}],total:2042,status:'pending',assignedDriver:'',routeSeq:0,ts:new Date(now-2800000).toISOString(),addr:'Majiwada, Ghodbunder Rd',lat:19.231,lng:72.978,gst:'',shopPhoto:''},
+    {id:'ORD004',shop:'National Stores',shopType:'Kirana',brand:'crunchco',brandName:'CrunchCo Snacks',rep:'Sujeet Gupta',repMob:'9999999991',items:[{id:'C1',name:'Masala Munchies Jar',qty:4,price:250},{id:'C3',name:'Spicy Mix Jar',qty:2,price:280}],total:1560,status:'pending',assignedDriver:'',routeSeq:0,ts:new Date(now-2000000).toISOString(),addr:'Wagle Estate, Thane',lat:19.191,lng:72.972,gst:'',shopPhoto:''},
+    {id:'ORD005',shop:'Om Provision Store',shopType:'Kirana',brand:'derby',brandName:'Derby Confectionery',rep:'Sujeet Gupta',repMob:'9999999991',items:[{id:'D1',name:'Timbuktu',qty:10,price:20},{id:'D6',name:'Mango Bite',qty:8,price:20}],total:360,status:'pending',assignedDriver:'',routeSeq:0,ts:new Date(now-1500000).toISOString(),addr:'Teen Haath Naka, Thane',lat:19.2015,lng:72.964,gst:'',shopPhoto:''},
+    {id:'ORD006',shop:'Lakshmi Medical',shopType:'Medical/Chemist',brand:'freshglo',brandName:'FreshGlo Personal Care',rep:'Priya Sharma',repMob:'9999999993',items:[{id:'F1',name:'Vitamin C Serum 30ml',qty:4,price:349},{id:'F3',name:'SPF 50 Sunscreen',qty:3,price:249}],total:2143,status:'pending',assignedDriver:'',routeSeq:0,ts:new Date(now-900000).toISOString(),addr:'Kapurbawdi, Thane',lat:19.228,lng:72.975,gst:'',shopPhoto:''},
+  ]);}
+  LS.set('inward_log',[
+    {item:'Timbuktu',brand:'Derby Confectionery',qty:200,ref:'INV-DRB-2234',ts:new Date(now-86400000).toISOString(),by:'Anil Waghmare'},
+    {item:'Choco Fudge Bar 6pk',brand:'HealthBite Protein',qty:60,ref:'INV-HB-0891',ts:new Date(now-172800000).toISOString(),by:'Anil Waghmare'},
+    {item:'Masala Munchies Jar',brand:'CrunchCo Snacks',qty:80,ref:'INV-CC-0045',ts:new Date(now-259200000).toISOString(),by:'Anil Waghmare'},
+  ]);
+  LS.set('returns',[]);
+  LS.set('collections',[]);
+  LS.set('cutoff_active',false);
+  LS.set('inv_num',1001);
+  LS.set('users_seeded',true);
+}
+seedData(); // run immediately
+
+
+// ============================================================
+// GLOBALS
+// ============================================================
+let CU=null; // current user
+let pinBuf='';
+let editingOrderId=null;
+let deliveryOrderId=null;
+let currentPage='';
+let clockInterval=null;
+const DRIVERS_META=[
+  {id:'D1',color:'#2563eb',avatar:'RK',name:'Ravi Kumar'},
+  {id:'D2',color:'#059669',avatar:'SP',name:'Suresh Patil'},
+  {id:'D3',color:'#7c3aed',avatar:'MS',name:'Manoj Singh'},
+];
+
+// ============================================================
+// LOGIN
+// ============================================================
+seedData();
+
+
+function kp(k){
+  try{haptic('tap');}catch(e){}
+  try{document.getElementById('lerr').textContent='';}catch(e){}
+  if(k==='clr'){pinBuf='';try{haptic('light');}catch(e){}}
+  else if(k==='del'){pinBuf=pinBuf.slice(0,-1);}
+  else if(pinBuf.length<6){pinBuf+=k;}
+  try{document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('f',i<pinBuf.length));}catch(e){}
+  if(pinBuf.length===6) setTimeout(tryLogin,120);
+}
+
+function tryLogin(){
+  const mob=document.getElementById('l-mob').value.trim();
+  const err=document.getElementById('lerr');
+  if(mob.length!==10){err.textContent='Enter 10-digit mobile';pinBuf='';updateDots();return;}
+  const users=LS.get('users',{});
+  const u=users[mob];
+  if(!u||u.pin!==pinBuf){err.textContent='Invalid mobile or PIN. Try again.';pinBuf='';updateDots();return;}
+  CU={...u,mobile:mob};
+  // update last seen for reps
+  if(CU.role==='rep'){
+    users[mob].lastSeen=istNow();
+    LS.set('users',users);
+  }
+  pinBuf='';updateDots();
+  launchApp();
+}
+
+function updateDots(){
+  document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('f',i<pinBuf.length));
+}
+
+function launchApp(){
+  haptic('success');
+  document.getElementById('login-wrap').style.display='none';
+  const app=document.getElementById('app');
+  app.style.display='flex';
+  // Header
+  document.getElementById('ua').textContent=CU.name.charAt(0);
+  document.getElementById('ua').style.background=CU.color||'#2563eb';
+  document.getElementById('un').textContent=CU.name.split(' ')[0];
+  document.getElementById('ur').textContent=CU.role.toUpperCase();
+  buildNav();
+  startClock();
+  initKeyboardHandler();
+}
+
+function logout(){
+  CU=null;pinBuf='';
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('l-mob').value='';
+  document.getElementById('lerr').textContent='';
+  updateDots();
+  if(clockInterval) clearInterval(clockInterval);
+}
+
+function buildNav(){
+  const bn=document.getElementById('bottom-nav');
+  if(CU.role==='owner'){
+    // Owner gets full navigation across all sections
+    const tabs=[
+      {id:'owner',icon:'📊',label:'Dashboard'},
+      {id:'sales',icon:'🛒',label:'Sales'},
+      {id:'driver',icon:'🚛',label:'Driver'},
+      {id:'loader',icon:'📦',label:'Loader'}
+    ];
+    bn.style.display='flex';
+    bn.innerHTML=tabs.map((t,i)=>`
+      <div class="bnav ${i===0?'on':''}" id="bnav-${t.id}" onclick="switchPage('${t.id}')">
+        <span class="bi">${t.icon}</span>${t.label}
+      </div>`).join('');
+    switchPage('owner');
+  } else {
+    // Rep, Driver, Loader land directly on their page — no nav bar
+    bn.style.display='none';
+    if(CU.role==='rep') { renderSales(); document.getElementById('page-sales').classList.add('active'); }
+    else if(CU.role==='driver') { renderDriver(); document.getElementById('page-driver').classList.add('active'); }
+    else if(CU.role==='loader') { renderLoader(); document.getElementById('page-loader').classList.add('active'); }
+    else { renderSales(); document.getElementById('page-sales').classList.add('active'); }
+  }
+}
+
+function switchPage(pid){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav').forEach(b=>b.classList.remove('on'));
+  const el=document.getElementById('page-'+pid);
+  if(el) el.classList.add('active');
+  const bn=document.getElementById('bnav-'+pid);
+  if(bn) bn.classList.add('on');
+  document.getElementById('scroll-wrap').scrollTop=0;
+  currentPage=pid;
+  if(pid==='owner') renderOwner();
+  else if(pid==='sales') renderSales();
+  else if(pid==='driver') renderDriver();
+  else if(pid==='loader') renderLoader();
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function istNow(){return new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true});}
+function istDate(d){return new Date(d).toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric'});}
+function istDT(d){return new Date(d).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true});}
+function startClock(){
+  const tick=()=>{document.getElementById('live-clock').textContent=istNow()+' IST';};
+  tick();clockInterval=setInterval(tick,30000);
+}
+
+// Keyboard visibility handler — scroll focused input into view
+function initKeyboardHandler(){
+  // For browsers that support visualViewport
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',()=>{
+      const focused=document.activeElement;
+      if(focused&&['INPUT','SELECT','TEXTAREA'].includes(focused.tagName)){
+        setTimeout(()=>focused.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+      }
+    });
+  }
+  // Universal: on any input focus, scroll it into view after short delay
+  document.addEventListener('focusin',e=>{
+    if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)){
+      setTimeout(()=>{
+        e.target.scrollIntoView({behavior:'smooth',block:'center'});
+      },300);
+    }
+  });
+}
+function toast(msg,dur=3000){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function showModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function closeMBG(el){el.classList.add('hidden');}
+function autoCap(inp){if(inp.value.length>0)inp.value=inp.value.charAt(0).toUpperCase()+inp.value.slice(1);}
+
+// ============================================================
+// HAPTIC FEEDBACK
+// ============================================================
+function haptic(type='light'){
+  try{
+    if(!LS.get('haptic_enabled',true)) return;
+    if(!navigator.vibrate) return;
+    const patterns={light:10,medium:30,success:[30,20,30],error:[50,30,50,30,50],warning:[30,20,50],tap:8,double:[15,10,15]};
+    navigator.vibrate(patterns[type]||10);
+  }catch(e){}
+}
+
+// ============================================================
+// API KEY MANAGEMENT
+// ============================================================
+function showApiKeyModal(){
+  const existing=LS.get('anthropic_key','');
+  const existingR=LS.get('routific_key','');
+  const inp=document.getElementById('apikey-input');
+  const rinp=document.getElementById('routific-key-input');
+  if(inp&&existing) inp.value=existing;
+  if(rinp&&existingR) rinp.value=existingR;
+  // Populate brand filter in report modal
+  const sel=document.getElementById('rp-brand');
+  if(sel){
+    const brands=LS.get('brands',{});
+    sel.innerHTML='<option value="">All Brands</option>'+
+      Object.entries(brands).map(([k,b])=>`<option value="${k}">${b.icon} ${b.name}</option>`).join('');
+  }
+  showModal('apikey-modal');
+  haptic('tap');
+}
+
+function saveApiKey(){
+  const key=document.getElementById('apikey-input')?.value.trim();
+  if(!key||!key.startsWith('sk-ant')){
+    document.getElementById('apikey-status').style.color='var(--danger)';
+    document.getElementById('apikey-status').textContent='⚠️ Invalid key format. Should start with sk-ant-...';
+    haptic('error');
+    return;
+  }
+  LS.set('anthropic_key',key);
+  document.getElementById('apikey-status').style.color='var(--green)';
+  document.getElementById('apikey-status').textContent='✅ API key saved! AI shop reading is now active.';
+  haptic('success');
+  setTimeout(()=>closeModal('apikey-modal'),1500);
+}
+
+function saveRoutificKey(){
+  const key=document.getElementById('routific-key-input')?.value.trim();
+  if(!key){toast('Enter Routific API key');return;}
+  LS.set('routific_key',key);
+  haptic('success');
+  toast('✅ Routific key saved');
+}
+
+function toggleHaptic(btn){
+  btn.classList.toggle('on');
+  btn.classList.toggle('off');
+  const enabled=btn.classList.contains('on');
+  LS.set('haptic_enabled',enabled);
+  if(enabled) navigator.vibrate&&navigator.vibrate(20);
+}
+
+function toggleTestMode(btn){
+  btn.classList.toggle('on');
+  btn.classList.toggle('off');
+  const enabled=btn.classList.contains('on');
+  LS.set('test_mode',enabled);
+  toast(enabled?'🧪 Test Mode ON — photo & GPS optional':'🔒 Test Mode OFF — photo & GPS required');
+}
+
+// ============================================================
+// FREE OCR — Tesseract.js (no API key, runs in browser)
+// ============================================================
+let tesseractLoaded=false;
+let tesseractWorker=null;
+
+async function loadTesseract(){
+  if(tesseractLoaded) return true;
+  return new Promise(resolve=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload=()=>{tesseractLoaded=true;resolve(true);};
+    s.onerror=()=>resolve(false);
+    document.head.appendChild(s);
+  });
+}
+
+async function ocrWithTesseract(imageData){
+  const loaded=await loadTesseract();
+  if(!loaded) return null;
+  try{
+    // Tesseract supports Hindi (hin), English (eng), Marathi via hin
+    const {createWorker}=Tesseract;
+    const worker=await createWorker('eng+hin',1,{
+      logger:()=>{}, // suppress logs
+    });
+    const {data:{text}}=await worker.recognize(imageData);
+    await worker.terminate();
+    return text.trim();
+  }catch(e){
+    console.error('Tesseract error:',e);
+    return null;
+  }
+}
+
+function parseOCRText(rawText){
+  if(!rawText) return null;
+  // Extract lines, filter empty
+  const lines=rawText.split('\n').map(l=>l.trim()).filter(l=>l.length>2);
+  if(!lines.length) return null;
+  // First substantial line = shop name
+  const shopName=lines[0];
+  // Look for phone numbers
+  const phoneMatch=rawText.match(/[0-9]{10}/);
+  // Detect shop type from keywords
+  const lower=rawText.toLowerCase();
+  let shopType='Kirana / General Store';
+  if(lower.includes('medical')||lower.includes('pharma')||lower.includes('chemist')) shopType='Medical / Chemist';
+  else if(lower.includes('bakery')||lower.includes('sweet')) shopType='Bakery / Sweet Shop';
+  else if(lower.includes('hotel')||lower.includes('restaurant')||lower.includes('dhaba')) shopType='Hotel / Restaurant';
+  else if(lower.includes('pan')||lower.includes('tobacco')) shopType='Pan / Cigarette Shop';
+  else if(lower.includes('super')||lower.includes('mart')) shopType='Supermarket';
+  return {
+    shop_name_english:shopName,
+    shop_name_original:lines.slice(0,2).join(' / '),
+    shop_type:shopType,
+    phone:phoneMatch?phoneMatch[0]:'',
+    address:lines.slice(1,3).join(', '),
+    confidence:lines.length>1?'medium':'low'
+  };
+}
+
+// ============================================================
+// ROUTIFIC API INTEGRATION
+// ============================================================
+async function optimizeWithRoutific(){
+  const routificKey=LS.get('routific_key','');
+  if(!routificKey){
+    toast('⚠️ Add Routific API key in ⚙️ Settings → Routific Key');
+    return;
+  }
+  const orders=LS.get('orders',[]).filter(o=>o.status==='billed'||o.status==='pending');
+  const activeDrivers=getActiveDrivers();
+  if(!orders.length){toast('No orders to route');return;}
+  if(!activeDrivers.length){toast('No drivers selected');return;}
+
+  toast('📡 Sending to Routific...');
+
+  // Build Routific payload
+  const visits={};
+  orders.forEach(o=>{
+    visits[o.id]={
+      location:{name:o.shop,lat:o.lat,lng:o.lng},
+      duration:10, // 10 min per stop
+    };
+  });
+  const fleet={};
+  activeDrivers.forEach((d,i)=>{
+    fleet[d.id]={
+      start_location:{name:'Warehouse',lat:19.200,lng:72.960},
+      end_location:{name:'Warehouse',lat:19.200,lng:72.960},
+    };
+  });
+
+  try{
+    const resp=await fetch('https://api.routific.com/v1/vrp',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+routificKey},
+      body:JSON.stringify({visits,fleet})
+    });
+    const data=await resp.json();
+    if(data.status==='success'||data.solution){
+      // Apply Routific solution to orders
+      const sol=data.solution;
+      let seq=1;
+      Object.entries(sol).forEach(([driverId,stops])=>{
+        const drv=activeDrivers.find(d=>d.id===driverId)||activeDrivers[0];
+        stops.forEach(stop=>{
+          if(stop.location_id==='start'||stop.location_id==='end') return;
+          const ord=orders.find(o=>o.id===stop.location_id);
+          if(ord){ord.assignedDriver=drv.id;ord.routeSeq=seq++;ord.status='billed';}
+        });
+      });
+      const allOrders=LS.get('orders',[]);
+      orders.forEach(o=>{const idx=allOrders.findIndex(x=>x.id===o.id);if(idx>-1)allOrders[idx]=o;});
+      LS.set('orders',allOrders);
+      toast('✅ Routific optimized '+orders.length+' stops!');
+      renderOwnerDispatch();
+    } else {
+      toast('Routific error: '+(data.error||JSON.stringify(data).slice(0,80)));
+    }
+  }catch(e){
+    toast('Routific connection failed: '+e.message);
+  }
+}
+
+// ============================================================
+// REPORT DOWNLOAD (CSV)
+// ============================================================
+function openReportModal(){
+  const today=new Date().toISOString().slice(0,10);
+  const weekAgo=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  document.getElementById('rp-from').value=weekAgo;
+  document.getElementById('rp-to').value=today;
+  const brands=LS.get('brands',{});
+  const sel=document.getElementById('rp-brand');
+  if(sel) sel.innerHTML='<option value="">All Brands</option>'+
+    Object.entries(brands).map(([k,b])=>`<option value="${k}">${b.icon} ${b.name}</option>`).join('');
+  const whoSel=document.getElementById('rp-who');
+  if(whoSel) whoSel.innerHTML=CU.role==='owner'
+    ?'<option value="me">My View</option><option value="all">All Reps</option>'
+    :'<option value="me">My Orders Only</option>';
+  document.getElementById('rp-preview').style.display='none';
+  showModal('report-modal');
+  haptic('tap');
+}
+
+function getFilteredOrders(){
+  const from=document.getElementById('rp-from')?.value;
+  const to=document.getElementById('rp-to')?.value;
+  const brand=document.getElementById('rp-brand')?.value;
+  const who=document.getElementById('rp-who')?.value;
+  let orders=LS.get('orders',[]);
+  if(from) orders=orders.filter(o=>o.ts>=from);
+  if(to) orders=orders.filter(o=>o.ts<=(to+'T23:59:59'));
+  if(brand) orders=orders.filter(o=>o.brand===brand);
+  if(who==='me') orders=orders.filter(o=>o.repMob===CU.mobile);
+  return orders;
+}
+
+function previewReport(){
+  const orders=getFilteredOrders();
+  if(!orders.length){
+    document.getElementById('rp-preview').style.display='block';
+    document.getElementById('rp-preview').innerHTML='<div style="color:var(--muted);text-align:center;padding:16px">No orders found for selected filters</div>';
+    return;
+  }
+  const total=orders.reduce((s,o)=>s+o.total,0);
+  const html=`<table style="width:100%;border-collapse:collapse;font-size:11px">
+    <tr style="background:var(--ink);color:#fff">
+      <th style="padding:6px 8px;text-align:left">Shop</th>
+      <th style="padding:6px 8px">Brand</th>
+      <th style="padding:6px 8px">Rep</th>
+      <th style="padding:6px 8px">Date</th>
+      <th style="padding:6px 8px">Amt</th>
+      <th style="padding:6px 8px">Status</th>
+    </tr>
+    ${orders.map(o=>`<tr style="border-bottom:1px solid #eee">
+      <td style="padding:5px 8px">${o.shop}</td>
+      <td style="padding:5px 8px">${o.brandName}</td>
+      <td style="padding:5px 8px">${o.rep}</td>
+      <td style="padding:5px 8px;font-size:10px">${istDate(o.ts)}</td>
+      <td style="padding:5px 8px;font-weight:700">₹${o.total}</td>
+      <td style="padding:5px 8px">${o.status}</td>
+    </tr>`).join('')}
+    <tr style="font-weight:700;background:#f0fdf4">
+      <td colspan="4" style="padding:6px 8px">TOTAL (${orders.length} orders)</td>
+      <td style="padding:6px 8px">₹${total.toLocaleString('en-IN')}</td>
+      <td></td>
+    </tr>
+  </table>`;
+  document.getElementById('rp-preview').style.display='block';
+  document.getElementById('rp-preview').innerHTML=html;
+  haptic('light');
+}
+
+function downloadReport(){
+  const orders=getFilteredOrders();
+  if(!orders.length){toast('No orders found for these filters');haptic('error');return;}
+  const from=document.getElementById('rp-from')?.value||'';
+  const to=document.getElementById('rp-to')?.value||'';
+  const brandFilter=document.getElementById('rp-brand')?.value||'all';
+  // Build CSV
+  const headers=['Order ID','Date','Time','Shop Name','Shop Type','Brand','Items','Qty','Total (₹)','Rep Name','Rep Mobile','GPS Lat','GPS Lng','Status','GST Number','Payment Mode'];
+  const rows=orders.map(o=>[
+    o.id,
+    istDate(o.ts),
+    new Date(o.ts).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true}),
+    '"'+o.shop.replace(/"/g,'""')+'"',
+    o.shopType||'',
+    '"'+o.brandName+'"',
+    '"'+o.items.map(i=>i.name+' x'+i.qty).join(', ')+'"',
+    o.items.reduce((s,i)=>s+i.qty,0),
+    o.total,
+    '"'+o.rep+'"',
+    o.repMob||'',
+    o.lat||'',
+    o.lng||'',
+    o.status,
+    o.gst||'',
+    o.collectedMode||'pending'
+  ]);
+  const csv=[headers.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); // BOM for Excel
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const fname=`DistribOS_${CU.name.replace(/ /g,'_')}_${from}_to_${to}_${brandFilter}.csv`;
+  a.href=url;a.download=fname;a.click();
+  URL.revokeObjectURL(url);
+  haptic('success');
+  toast('✅ Report downloaded: '+fname);
+  closeModal('report-modal');
+}
+function isCutoff(){return LS.get('cutoff_active',false);}
+function nextInvNum(){const n=LS.get('inv_num',1001);LS.set('inv_num',n+1);return 'INV-'+String(n).padStart(4,'0');}
+
+function doChangePin(){
+  const mob=document.getElementById('cp-mob').value.trim();
+  const old=document.getElementById('cp-old').value.trim();
+  const nw=document.getElementById('cp-new').value.trim();
+  const conf=document.getElementById('cp-conf').value.trim();
+  const err=document.getElementById('cp-err');
+  const users=LS.get('users',{});
+  if(!users[mob]||users[mob].pin!==old){err.textContent='Invalid mobile or current PIN';return;}
+  if(nw.length!==6||!/^\d+$/.test(nw)){err.textContent='New PIN must be 6 digits';return;}
+  if(nw!==conf){err.textContent='PINs do not match';return;}
+  users[mob].pin=nw;LS.set('users',users);
+  closeModal('pin-change-modal');
+  toast('✅ PIN changed successfully');
+}
+
+function stab(containerId, tabId, renderFn){
+  const wrap=document.getElementById(containerId);
+  if(!wrap) return;
+  wrap.querySelectorAll('.stab').forEach(t=>t.classList.remove('on'));
+  wrap.querySelectorAll('.stab-content').forEach(c=>c.style.display='none');
+  const tab=wrap.querySelector('[data-stab="'+tabId+'"]');
+  const content=wrap.querySelector('[data-stab-content="'+tabId+'"]');
+  if(tab) tab.classList.add('on');
+  if(content) content.style.display='block';
+  if(renderFn) renderFn();
+}
+
+// ============================================================
+// OWNER PAGE
+// ============================================================
+function renderOwner(){
+  const pg=document.getElementById('page-owner');
+  const now=new Date();
+  const h=now.getHours();
+  const greet=h<12?'Good Morning ☀️':h<17?'Good Afternoon 🌤️':'Good Evening 🌆';
+  const brands=LS.get('brands',{});
+  const orders=LS.get('orders',[]);
+  const users=LS.get('users',{});
+  const cutoff=isCutoff();
+  const total=orders.reduce((s,o)=>s+o.total,0);
+  const coll=orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  const shops=[...new Set(orders.map(o=>o.shop))].length;
+
+  pg.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800">${greet}, ${CU.name.split(' ')[0]} 👋</div>
+      <div style="font-size:12px;color:var(--muted)">${now.toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',weekday:'long',day:'numeric',month:'long'})}</div>
+    </div>
+    ${cutoff?'<span class="sbadge sb-return" style="margin-top:4px">🔒 CUTOFF</span>':'<span class="sbadge sb-delivered" style="margin-top:4px">🟢 OPEN</span>'}
+  </div>
+
+  ${cutoff
+    ?'<div class="cutoff-banner"><span class="cb-icon">🔒</span><div><div class="cb-title">Billing Cutoff Active</div><div class="cb-sub">Orders locked · Dispatch & billing in progress</div></div></div>'
+    :'<div class="cutoff-banner open"><span class="cb-icon">🟢</span><div><div class="cb-title">Orders Open</div><div class="cb-sub">Accepting orders until 3:00 PM</div></div></div>'}
+
+  <div class="mg mg-2">
+    <div class="mtile"><div class="mtile-val" style="color:var(--accent)">₹${total.toLocaleString('en-IN')}</div><div class="mtile-lab">Today Sales</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--green)">₹${coll.toLocaleString('en-IN')}</div><div class="mtile-lab">Collected</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--purple)">${orders.length}</div><div class="mtile-lab">Orders</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--warn)">${shops}</div><div class="mtile-lab">Shops</div></div>
+  </div>
+
+  <div class="stabs" id="owner-stabs">
+    <div class="stab on" data-stab="dashboard" onclick="oStab('dashboard',this)">Dashboard</div>
+    <div class="stab" data-stab="orders" onclick="oStab('orders',this)">Orders</div>
+    <div class="stab" data-stab="dispatch" onclick="oStab('dispatch',this)">Dispatch</div>
+    <div class="stab" data-stab="billing" onclick="oStab('billing',this)">Billing</div>
+    <div class="stab" data-stab="reports" onclick="oStab('reports',this)">Reports</div>
+    <div class="stab" data-stab="inward" onclick="oStab('inward',this)">Inward</div>
+    <div class="stab" data-stab="stock" onclick="oStab('stock',this)">Stock</div>
+    <div class="stab" data-stab="team" onclick="oStab('team',this)">Team</div>
+  </div>
+  <div id="owner-content"></div>`;
+
+  oStab('dashboard');
+}
+
+function oStab(t,el){
+  const stabs=document.querySelectorAll('#owner-stabs .stab');
+  stabs.forEach(s=>s.classList.remove('on'));
+  if(el) el.classList.add('on');
+  else{const found=[...stabs].find(s=>s.dataset.stab===t);if(found)found.classList.add('on');}
+  const fns={dashboard:renderOwnerDash,orders:renderOwnerOrders,dispatch:renderOwnerDispatch,billing:renderOwnerBilling,reports:renderOwnerReports,inward:renderOwnerInward,stock:renderOwnerStock,team:renderOwnerTeam};
+  if(fns[t]) fns[t]();
+}
+
+// OWNER DASHBOARD
+function renderOwnerDash(){
+  const orders=LS.get('orders',[]);
+  const brands=LS.get('brands',{});
+  const users=LS.get('users',{});
+  const total=orders.reduce((s,o)=>s+o.total,0);
+  const coll=orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  const bmap={};
+  orders.forEach(o=>{if(!bmap[o.brand]){const b=brands[o.brand];bmap[o.brand]={name:o.brandName,rev:0,orders:0,color:b?.color||'#888',icon:b?.icon||'📦'};}bmap[o.brand].rev+=o.total;bmap[o.brand].orders++;});
+  const maxRev=Math.max(...Object.values(bmap).map(b=>b.rev),1);
+  const reps=Object.entries(users).filter(([m,u])=>u.role==='rep'&&u.lastLat);
+  const drivers=DRIVERS_META.map(d=>{const dOrds=orders.filter(o=>o.assignedDriver===d.id);const done=dOrds.filter(o=>o.status==='delivered').length;return {...d,total:dOrds.reduce((s,o)=>s+o.total,0),done,count:dOrds.length};});
+  // Stock alerts
+  let alerts='';
+  Object.values(brands).forEach(b=>b.skus.forEach(s=>{if(s.stock===0) alerts+=`<div class="row"><span>⛔ ${s.name} <span style="font-size:11px;color:var(--muted)">${b.name}</span></span><span class="sk-out">OUT</span></div>`;else if(s.stock<15) alerts+=`<div class="row"><span>⚠️ ${s.name} <span style="font-size:11px;color:var(--muted)">${b.name}</span></span><span class="sk-low">LOW: ${s.stock}</span></div>`;}));
+
+  document.getElementById('owner-content').innerHTML=`
+  <div class="sec-hdr">Brand Performance</div>
+  <div class="card">
+    ${Object.values(bmap).map(b=>`
+    <div class="row">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">${b.icon}</span>
+        <div><div style="font-weight:600;font-size:13px">${b.name}</div>
+          <div class="pbar" style="width:100px"><div class="pfill" style="width:${(b.rev/maxRev*100).toFixed(0)}%;background:${b.color}"></div></div>
+        </div>
+      </div>
+      <div style="text-align:right"><div style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${b.color}">₹${b.rev.toLocaleString('en-IN')}</div><div style="font-size:11px;color:var(--muted)">${b.orders} orders</div></div>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:13px">No orders yet</div>'}
+  </div>
+
+  <div class="sec-hdr">Driver Status</div>
+  ${drivers.map(d=>{
+    const pct=d.count>0?Math.round(d.done/d.count*100):0;
+    return `<div class="card" style="border-left:3px solid ${d.color}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${d.color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">${d.avatar}</div>
+        <div style="flex:1"><div style="font-weight:700">${d.name}</div><div style="font-size:12px;color:var(--muted)">${d.count} stops · ₹${d.total.toLocaleString('en-IN')}</div></div>
+        <div style="font-weight:800;font-size:15px;color:${d.color}">${pct}%</div>
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${pct}%;background:${d.color}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px"><span>${d.done} delivered</span><span>${d.count-d.done} pending</span></div>
+    </div>`;
+  }).join('')}
+
+  <div class="sec-hdr">Sales Rep Last Location</div>
+  <div class="card">
+    ${reps.length?reps.map(([mob,u])=>`
+    <div class="row">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px #d1fae5;flex-shrink:0"></div>
+        <div><div style="font-weight:600;font-size:13px">${u.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${u.brands.map(b=>LS.get('brands',{})[b]?.name||b).join(', ')}</div>
+          <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted)">${u.lastLat?.toFixed(4)}, ${u.lastLng?.toFixed(4)} · ${u.lastSeen||'Today'}</div>
+        </div>
+      </div>
+      <a href="https://maps.google.com/?q=${u.lastLat},${u.lastLng}" target="_blank" class="btn btn-ghost btn-sm">🗺️</a>
+    </div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px">No rep locations available</div>'}
+  </div>
+
+  ${alerts?`<div class="sec-hdr">⚠️ Stock Alerts</div><div class="card">${alerts}</div>`:
+  '<div class="card c-green"><div class="row"><span>✅ All stock levels normal</span><span style="color:var(--green);font-weight:600">OK</span></div></div>'}
+
+  <div class="sec-hdr">Quick Actions</div>
+  <div class="mg mg-2">
+    <button class="btn btn-primary btn-block" onclick="oStab('dispatch',null)">🗺️ Dispatch</button>
+    <button class="btn btn-ghost btn-block" onclick="oStab('orders',null)">📋 Orders</button>
+    <button class="btn btn-success btn-block" onclick="oStab('billing',null)">🖨️ Print Bills</button>
+    <button class="btn btn-ghost btn-block" onclick="oStab('reports',null)">📊 Reports</button>
+  </div>`;
+}
+
+// OWNER ORDERS
+function renderOwnerOrders(){
+  const orders=LS.get('orders',[]);
+  const statusFilter=document.getElementById('ord-sf')?.value||'';
+  const filtered=statusFilter?orders.filter(o=>o.status===statusFilter):orders;
+  document.getElementById('owner-content').innerHTML=`
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <select id="ord-sf" onchange="renderOwnerOrders()" style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;outline:none">
+      <option value="">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="billed">Billed</option>
+      <option value="dispatched">Dispatched</option>
+      <option value="delivered">Delivered</option>
+      <option value="return">Returned</option>
+    </select>
+    <div style="background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--muted);white-space:nowrap">${filtered.length} orders</div>
+  </div>
+  ${filtered.length?filtered.map(o=>`
+  <div class="ord-card" onclick="showOrderDetail('${o.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div class="ord-shop">${o.shop}</div>
+        <div class="ord-meta">${o.shopType} · ${o.rep}</div>
+        <div class="ord-chips">
+          <span class="och">${istDT(o.ts)}</span>
+          <span class="och">Zone ${o.assignedDriver?DRIVERS_META.find(d=>d.id===o.assignedDriver)?.name||'—':'Unassigned'}</span>
+          ${o.gst?'<span class="och" style="color:var(--accent)">GST</span>':''}
+        </div>
+        <div style="margin-top:7px">
+          <span class="sbadge ${o.status==='pending'?'sb-pending':o.status==='billed'?'sb-billed':o.status==='dispatched'?'sb-dispatched':o.status==='delivered'?'sb-delivered':'sb-return'}">${o.status.toUpperCase()}</span>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:10px">
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent)">₹${o.total.toLocaleString('en-IN')}</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="event.stopPropagation();cycleStatus('${o.id}')">▶ Next</button>
+      </div>
+    </div>
+  </div>`).join('')
+  :'<div class="card" style="text-align:center;color:var(--muted);padding:30px">No orders found</div>'}`;
+}
+
+function showOrderDetail(id){
+  const orders=LS.get('orders',[]);
+  const o=orders.find(x=>x.id===id);if(!o) return;
+  const drv=DRIVERS_META.find(d=>d.id===o.assignedDriver);
+  document.getElementById('odm-content').innerHTML=`
+  <div style="margin-bottom:14px">
+    <div style="font-size:18px;font-weight:800">${o.shop}</div>
+    <div style="font-size:12px;color:var(--muted)">${o.shopType} · ${o.addr}</div>
+  </div>
+  <div class="mg mg-2" style="margin-bottom:12px">
+    <div style="background:var(--surface2);border-radius:10px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Date & Time (IST)</div><div style="font-weight:700;font-size:13px;margin-top:2px">${istDT(o.ts)}</div></div>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Sales Rep</div><div style="font-weight:700;font-size:13px;margin-top:2px">${o.rep}</div></div>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Driver</div><div style="font-weight:700;font-size:13px;margin-top:2px;color:${drv?.color||'var(--muted)'}">${drv?.name||'Unassigned'}</div></div>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Order ID</div><div style="font-weight:700;font-size:13px;margin-top:2px;font-family:'IBM Plex Mono',monospace">${o.id}</div></div>
+  </div>
+  <div class="card-title">Items</div>
+  ${o.items.map(i=>`<div class="row"><span>${i.name} ×${i.qty}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700">₹${i.qty*i.price}</span></div>`).join('')}
+  <div class="divider"></div>
+  <div class="row"><span style="font-weight:700">Total</span><span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent)">₹${o.total}</span></div>
+  ${o.gst?`<div style="font-size:12px;color:var(--accent);margin-top:6px">🧾 GST Invoice · GSTIN: ${o.gst}</div>`:''}
+  ${o.lat?`<a href="https://maps.google.com/?q=${o.lat},${o.lng}" target="_blank" class="btn btn-ghost btn-block" style="margin-top:12px">🗺️ View Shop Location</a>`:''}`;
+  showModal('order-detail-modal');
+}
+
+function cycleStatus(id){
+  const orders=LS.get('orders',[]);
+  const o=orders.find(x=>x.id===id);if(!o) return;
+  const c=['pending','billed','dispatched','delivered'];
+  const idx=c.indexOf(o.status);
+  o.status=idx>=0&&idx<c.length-1?c[idx+1]:'pending';
+  LS.set('orders',orders);
+  toast(`${o.id} → ${o.status.toUpperCase()}`);
+  renderOwnerOrders();
+}
+
+// OWNER DISPATCH
+function renderOwnerDispatch(){
+  const orders=LS.get('orders',[]);
+  const activeOrds=orders.filter(o=>o.status==='pending'||o.status==='billed');
+  const hasAssigned=activeOrds.some(o=>o.assignedDriver);
+  const cutoff=isCutoff();
+  const bVals=DRIVERS_META.map(d=>orders.filter(o=>o.assignedDriver===d.id).reduce((s,o)=>s+o.total,0));
+  const totalDisp=bVals.reduce((a,b)=>a+b,0);
+
+  document.getElementById('owner-content').innerHTML=`
+  <div class="dsteps">
+    <div class="dstep ${cutoff?'done':''}" id="dstep1"><span class="ds-icon">🔒</span>CUTOFF</div>
+    <div class="dstep ${hasAssigned?'done':''}" id="dstep2"><span class="ds-icon">⚡</span>OPTIMIZE</div>
+    <div class="dstep" id="dstep3"><span class="ds-icon">✅</span>APPROVE</div>
+  </div>
+
+  <div class="card c-accent">
+    <div class="card-title">Batch Dispatch Engine</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+      Set drivers present today → Geo-sort master route → Equal-value split between active drivers.
+    </div>
+
+    <!-- DRIVER SELECTOR -->
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Drivers Present Today — 1:00 PM Decision</div>
+      ${DRIVERS_META.map((d,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${d.color};color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center">${d.avatar}</div>
+          <div><div style="font-weight:600;font-size:13px">${d.name}</div><div style="font-size:11px;color:var(--muted)">Driver ${i+1}</div></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <span style="font-size:12px;color:var(--muted)">Present</span>
+          <input type="checkbox" id="drv-chk-${d.id}" checked style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer"/>
+        </label>
+      </div>`).join('')}
+      <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:600" id="driver-count-label">3 drivers → ~₹33,333 each per ₹1L</div>
+      <div style="margin-top:4px;font-size:11px;color:var(--muted)" id="driver-policy-note">Policy: Each driver delivers ≈ equal share of total billing value</div>
+    </div>
+
+    <div class="mg mg-2" style="margin-bottom:8px">
+      ${!cutoff?`<button class="btn btn-warn btn-block" onclick="triggerCutoff()">🔒 Trigger Cutoff (3PM)</button>`
+      :`<button class="btn btn-ghost btn-block" disabled>🔒 Cutoff Active</button>`}
+      <button class="btn btn-primary btn-block" onclick="runDispatch()">⚡ Local Optimize & Split</button>
+    </div>
+    <button class="btn btn-success btn-block" onclick="approveDispatch()">✅ Approve & Lock Routes</button>
+    <button class="btn btn-ghost btn-block" onclick="optimizeWithRoutific()" style="border-color:#7c3aed;color:#7c3aed">🔀 Optimize via Routific API</button>
+  </div>
+
+  ${hasAssigned?`
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">Value Balance — Active Drivers Only</div>
+    ${DRIVERS_META.filter(d=>bVals[DRIVERS_META.indexOf(d)]>0).map((d,i)=>{
+      const di=DRIVERS_META.indexOf(d);
+      const maxV=Math.max(...bVals,1);
+      const activeBVals=bVals.filter(v=>v>0);
+      const avgV=activeBVals.reduce((a,b)=>a+b,0)/Math.max(activeBVals.length,1);
+      const balanced=bVals[di]>=(avgV*0.8)&&bVals[di]<=(avgV*1.2);
+      return `<div class="bal-row">
+        <div class="bal-name" style="color:${d.color}">${d.avatar}</div>
+        <div class="bal-bar-wrap"><div class="pbar"><div class="pfill" style="width:${(bVals[di]/maxV*100).toFixed(0)}%;background:${d.color}"></div></div></div>
+        <div class="bal-val" style="color:${d.color}">₹${bVals[di].toLocaleString('en-IN')}</div>
+        <div>${balanced?'<span class="bal-ok">✓ BAL</span>':'<span class="bal-warn">⚠ ADJ</span>'}</div>
+      </div>`;
+    }).join('')}
+  </div>`:''}
+
+  <div id="dispatch-batches">
+    ${DRIVERS_META.map((d,di)=>{
+      const dOrds=orders.filter(o=>o.assignedDriver===d.id).sort((a,b)=>a.routeSeq-b.routeSeq);
+      // Only show cards for drivers with orders OR who are active
+      if(!dOrds.length) return '';
+      const dTotal=dOrds.reduce((s,o)=>s+o.total,0);
+      return `<div class="dcard" style="border-color:${d.color}40">
+        <div class="dcard-head" style="background:${d.color}08">
+          <div class="d-avatar" style="background:${d.color}">${d.avatar}</div>
+          <div style="flex:1"><div style="font-weight:700">${d.name}</div><div style="font-size:12px;color:var(--muted)">Sub-batch ${di+1} of 3</div></div>
+          <div style="text-align:right"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${d.color}">₹${dTotal.toLocaleString('en-IN')}</div><div style="font-size:11px;color:var(--muted)">${dOrds.length} stops</div></div>
+        </div>
+        <div class="dcard-stats">
+          <div class="dstat"><div class="dstat-val" style="color:${d.color}">${dOrds.length}</div><div class="dstat-lab">Stops</div></div>
+          <div class="dstat"><div class="dstat-val" style="color:${d.color}">${dOrds.reduce((s,o)=>s+o.items.reduce((ss,i)=>ss+i.qty,0),0)}</div><div class="dstat-lab">Items</div></div>
+          <div class="dstat"><div class="dstat-val" style="color:${d.color}">${((dTotal/Math.max(orders.reduce((s,o)=>s+o.total,0),1))*100).toFixed(0)}%</div><div class="dstat-lab">Share</div></div>
+        </div>
+        <div class="dcard-stops">
+          ${dOrds.map((o,i)=>`
+          <div class="dstop" style="border-color:${d.color}">
+            <div style="width:22px;height:22px;border-radius:50%;background:${d.color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.shop}</div>
+              <div style="font-size:11px;color:var(--muted)">${o.addr}</div>
+              <div style="font-size:11px;color:var(--accent);margin-top:2px">${o.items.map(x=>x.name+'×'+x.qty).join(', ')}</div>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+              <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px">₹${o.total}</div>
+              <div style="display:flex;gap:3px;margin-top:4px">
+                <button class="btn btn-ghost btn-sm" style="padding:3px 7px" onclick="moveStop('${o.id}',${di},-1)">↑</button>
+                <button class="btn btn-ghost btn-sm" style="padding:3px 7px" onclick="moveStop('${o.id}',${di},1)">↓</button>
+                <button class="btn btn-ghost btn-sm" style="padding:3px 7px;font-size:10px" onclick="shiftStop('${o.id}',${di})">⇄</button>
+              </div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  setTimeout(()=>{DRIVERS_META.forEach(d=>{const c=document.getElementById('drv-chk-'+d.id);if(c)c.addEventListener('change',updateDriverCountLabel);});updateDriverCountLabel();},100);
+}
+
+function triggerCutoff(){
+  const orders=LS.get('orders',[]);
+  orders.filter(o=>o.status==='pending').forEach(o=>o.status='billed');
+  LS.set('orders',orders);
+  LS.set('cutoff_active',true);
+  toast('🔒 Billing cutoff triggered — orders locked');
+  renderOwnerDispatch();
+  // refresh dashboard count
+  if(currentPage==='owner') renderOwner();
+}
+
+function getActiveDrivers(){
+  // Get only checked drivers from the dispatch UI
+  return DRIVERS_META.filter(d=>{
+    const chk=document.getElementById('drv-chk-'+d.id);
+    return chk?chk.checked:true; // default to included if checkbox not in DOM
+  });
+}
+
+function updateDriverCountLabel(){
+  const active=getActiveDrivers();
+  const orders=LS.get('orders',[]);
+  const totalVal=orders.reduce((s,o)=>s+o.total,0);
+  const perDriver=active.length>0?Math.round(totalVal/active.length):0;
+  const lbl=document.getElementById('driver-count-label');
+  const note=document.getElementById('driver-policy-note');
+  if(lbl) lbl.textContent=`${active.length} driver${active.length!==1?'s':''} present → ≈₹${perDriver.toLocaleString('en-IN')} each (total ₹${totalVal.toLocaleString('en-IN')})`;
+  if(note){
+    if(active.length===0) note.textContent='⚠️ No drivers selected!';
+    else if(active.length===1) note.textContent='All '+orders.length+' orders go to 1 driver';
+    else note.textContent=`Policy: Equal value split between ${active.length} present drivers`;
+  }
+}
+
+// Attach change listener when dispatch renders
+function runDispatch(){
+  const activeDrivers=getActiveDrivers();
+  if(!activeDrivers.length){toast('⚠️ Select at least 1 driver');return;}
+  let orders=LS.get('orders',[]);
+  // Clear previous assignments
+  orders.forEach(o=>{o.assignedDriver='';o.routeSeq=0;});
+  const active=orders.filter(o=>o.status!=='delivered'&&o.status!=='return');
+  if(!active.length){toast('No active orders to dispatch');return;}
+  // Step 1: Geo-sort from warehouse (Thane West 19.200, 72.960)
+  let remaining=[...active],sorted=[],curLat=19.200,curLng=72.960;
+  while(remaining.length){
+    let best=null,bestD=Infinity,bestI=0;
+    remaining.forEach((o,i)=>{const d=(o.lat-curLat)**2+(o.lng-curLng)**2;if(d<bestD){bestD=d;best=o;bestI=i;}});
+    sorted.push(best);curLat=best.lat;curLng=best.lng;remaining.splice(bestI,1);
+  }
+  // Step 2: Value-balanced N-way split (N = active drivers)
+  const N=activeDrivers.length;
+  const totalV=sorted.reduce((s,o)=>s+o.total,0);
+  const target=totalV/N;
+  let dIdx=0,running=0;
+  sorted.forEach((o,i)=>{
+    const ord=orders.find(x=>x.id===o.id);
+    if(ord){ord.assignedDriver=activeDrivers[dIdx].id;ord.routeSeq=i+1;}
+    running+=o.total;
+    // Move to next driver when target reached, don't exceed last driver
+    if(running>=target&&dIdx<N-1){dIdx++;running=0;}
+  });
+  LS.set('orders',orders);
+  const bVals=activeDrivers.map(d=>orders.filter(o=>o.assignedDriver===d.id).reduce((s,o)=>s+o.total,0));
+  const splitStr=bVals.map((v,i)=>activeDrivers[i].avatar+': ₹'+v.toLocaleString('en-IN')).join(' / ');
+  toast(`✅ ${N} drivers · ${splitStr}`);
+  renderOwnerDispatch();
+}
+
+function approveDispatch(){
+  const orders=LS.get('orders',[]);
+  orders.filter(o=>o.assignedDriver&&o.status==='billed').forEach(o=>o.status='dispatched');
+  LS.set('orders',orders);
+  toast('✅ Routes approved — drivers notified');
+  renderOwnerDispatch();
+}
+
+function moveStop(ordId,driverIdx,dir){
+  const orders=LS.get('orders',[]);
+  const d=DRIVERS_META[driverIdx];
+  const dOrds=orders.filter(o=>o.assignedDriver===d.id).sort((a,b)=>a.routeSeq-b.routeSeq);
+  const idx=dOrds.findIndex(o=>o.id===ordId);
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=dOrds.length) return;
+  const tmp=dOrds[idx].routeSeq;dOrds[idx].routeSeq=dOrds[newIdx].routeSeq;dOrds[newIdx].routeSeq=tmp;
+  const ord1=orders.find(o=>o.id===dOrds[idx].id);
+  const ord2=orders.find(o=>o.id===dOrds[newIdx].id);
+  if(ord1)ord1.routeSeq=dOrds[idx].routeSeq;
+  if(ord2)ord2.routeSeq=dOrds[newIdx].routeSeq;
+  LS.set('orders',orders);
+  renderOwnerDispatch();
+}
+
+function shiftStop(ordId,fromIdx){
+  const orders=LS.get('orders',[]);
+  const o=orders.find(x=>x.id===ordId);if(!o) return;
+  const nextIdx=(fromIdx+1)%3;
+  o.assignedDriver=DRIVERS_META[nextIdx].id;
+  const maxSeq=Math.max(0,...orders.filter(x=>x.assignedDriver===o.assignedDriver).map(x=>x.routeSeq||0));
+  o.routeSeq=maxSeq+1;
+  LS.set('orders',orders);
+  toast(`Moved to ${DRIVERS_META[nextIdx].name}`);
+  renderOwnerDispatch();
+}
+
+// OWNER BILLING
+function renderOwnerBilling(){
+  document.getElementById('owner-content').innerHTML=`
+  <div class="card c-accent">
+    <div class="card-title">Batch Bill Printing</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Bills print in route order. Driver 1 bills first, then Driver 2, Driver 3. Each set preceded by load summary sheet.</div>
+    <div class="field">
+      <label>Select Driver Batch</label>
+      <select id="bill-drv" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:14px;background:#fff;outline:none">
+        <option value="all">All 3 Drivers (Full Run)</option>
+        <option value="D1">Driver 1 — Ravi Kumar</option>
+        <option value="D2">Driver 2 — Suresh Patil</option>
+        <option value="D3">Driver 3 — Manoj Singh</option>
+      </select>
+    </div>
+    <div class="toggle-wrap"><span style="font-size:13px">Include Load Summary Sheet</span><button class="tog on" id="tog-load" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button></div>
+    <div class="toggle-wrap"><span style="font-size:13px">Print in Route Sequence</span><button class="tog on" id="tog-route" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button></div>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost btn-block" onclick="previewBills()">👁️ Preview Route Order</button>
+    <button class="btn btn-primary btn-block" onclick="printBills()">🖨️ Print Bills + Load Summary</button>
+  </div>
+  <div id="bill-preview-area"></div>
+  <div class="card c-warn">
+    <div class="card-title">🖨️ Recommended Printer</div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div style="font-size:32px">🖨️</div>
+      <div>
+        <div style="font-weight:700">Epson TM-T82III</div>
+        <div style="font-size:12px;color:var(--muted)">80mm thermal · LAN · 200mm/sec · ₹8,500</div>
+        <div style="font-size:12px;color:var(--muted)">Connect to warehouse WiFi · Print from any device</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function getDriverOrders(drvSel){
+  const orders=LS.get('orders',[]);
+  const billable=orders.filter(o=>o.status==='billed'||o.status==='dispatched'||o.status==='delivered');
+  if(drvSel==='all') return DRIVERS_META.map(d=>({driver:d,orders:billable.filter(o=>o.assignedDriver===d.id).sort((a,b)=>a.routeSeq-b.routeSeq)}));
+  const d=DRIVERS_META.find(x=>x.id===drvSel);
+  return [{driver:d,orders:billable.filter(o=>o.assignedDriver===d.id).sort((a,b)=>a.routeSeq-b.routeSeq)}];
+}
+
+function previewBills(){
+  const sel=document.getElementById('bill-drv').value;
+  const batches=getDriverOrders(sel);
+  let html='';
+  batches.forEach(({driver:d,orders:dOrds})=>{
+    if(!dOrds.length) return;
+    html+=`<div class="dcard" style="border-color:${d.color}40;margin-top:10px">
+      <div class="dcard-head" style="background:${d.color}08">
+        <div class="d-avatar" style="background:${d.color}">${d.avatar}</div>
+        <div><div style="font-weight:700">${d.name} — ${dOrds.length} bills</div><div style="font-size:12px;color:var(--muted)">Route order preview</div></div>
+      </div>
+      <div style="padding:0 14px 14px">
+        ${dOrds.map((o,i)=>`<div class="row"><span><b>${i+1}.</b> ${o.shop}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">₹${o.total} · ${istDT(o.ts)}</span></div>`).join('')}
+        <div style="margin-top:8px;font-size:12px;color:var(--green);font-weight:600">✅ Route approved. Ready to print.</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('bill-preview-area').innerHTML=html||'<div class="card" style="text-align:center;color:var(--muted)">No billable orders found. Run dispatch first.</div>';
+  toast('Preview ready');
+}
+
+function printBills(){
+  const sel=document.getElementById('bill-drv')?.value||'all';
+  const inclLoad=document.getElementById('tog-load')?.classList.contains('on')!==false;
+  const batches=getDriverOrders(sel);
+  let html='';
+  batches.forEach(({driver:d,orders:dOrds})=>{
+    if(!dOrds.length) return;
+    if(inclLoad){
+      const imap={};
+      dOrds.forEach(o=>o.items.forEach(i=>{if(!imap[i.name])imap[i.name]=0;imap[i.name]+=i.qty;}));
+      html+=`<div class="pload">
+        <div class="pload-title">📦 LOAD SUMMARY — ${d.name}</div>
+        <div class="pload-sub">${istDT(new Date())} IST · ${dOrds.length} deliveries · ₹${dOrds.reduce((s,o)=>s+o.total,0).toLocaleString('en-IN')}</div>
+        ${Object.entries(imap).map(([item,qty])=>`<div class="pline"><span>${item}</span><span><b>${qty}</b> units</span></div>`).join('')}
+        <div class="pline" style="font-weight:700;border-top:1.5px solid #000;margin-top:4px"><span>TOTAL STOPS</span><span>${dOrds.length}</span></div>
+      </div>`;
+    }
+    dOrds.forEach(o=>{
+      const hasGst=!!o.gst;
+      const gstAmt=hasGst?Math.round(o.total*.12):0;
+      const invNum=nextInvNum();
+      html+=`<div class="pbill">
+        <div class="pbill-head"><h4>DistribOS — Thane FMCG</h4><p>GSTIN: 27AAAAA0000A1Z5 · ${istDate(o.ts)}</p></div>
+        <div class="pline"><span><b>To:</b> ${o.shop}</span></div>
+        <div class="pline"><span>Sales Rep:</span><span>${o.rep}</span></div>
+        <div class="pline"><span>Delivery:</span><span>${d.name}</span></div>
+        <div class="pline"><span>Order Time:</span><span>${istDT(o.ts)}</span></div>
+        ${o.gst?`<div class="pline"><span>Cust GSTIN:</span><span>${o.gst}</span></div>`:''}
+        <div style="height:3px"></div>
+        ${o.items.map(i=>`<div class="pline"><span>${i.name} ×${i.qty}</span><span>₹${i.qty*i.price}</span></div>`).join('')}
+        <div class="pline"><span>Subtotal</span><span>₹${o.total}</span></div>
+        ${hasGst?`<div class="pline"><span>CGST @6%</span><span>₹${Math.round(gstAmt/2)}</span></div><div class="pline"><span>SGST @6%</span><span>₹${Math.round(gstAmt/2)}</span></div>`:''}
+        <div class="ptotal"><span>TOTAL</span><span>₹${o.total+gstAmt}</span></div>
+        <div class="pfoot">Inv: ${invNum} · UPI: distrib@upi · Cash on Delivery<br>${hasGst?'B2B GST Invoice':'Regular Invoice'}</div>
+      </div>`;
+    });
+  });
+  if(!html){toast('No billable orders. Run dispatch first.');return;}
+  document.getElementById('print-area').innerHTML=html;
+  window.print();
+  toast('🖨️ Printing...');
+}
+
+// OWNER REPORTS
+function renderOwnerReports(){
+  const orders=LS.get('orders',[]);
+  const total=orders.reduce((s,o)=>s+o.total,0);
+  const coll=orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  const rets=orders.filter(o=>o.status==='return');
+  const bmap={};orders.forEach(o=>{if(!bmap[o.brand])bmap[o.brand]={name:o.brandName,rev:0,orders:0};bmap[o.brand].rev+=o.total;bmap[o.brand].orders++;});
+  const rmap={};orders.forEach(o=>{if(!rmap[o.rep])rmap[o.rep]={orders:0,rev:0};rmap[o.rep].orders++;rmap[o.rep].rev+=o.total;});
+
+  document.getElementById('owner-content').innerHTML=`
+  <div class="stabs">
+    <div class="stab on" onclick="rTab('daily',this)">Daily</div>
+    <div class="stab" onclick="rTab('custom',this)">Custom</div>
+    <div class="stab" onclick="rTab('brand',this)">Brand</div>
+    <div class="stab" onclick="rTab('rep',this)">Rep</div>
+    <div class="stab" onclick="rTab('driver',this)">Driver</div>
+  </div>
+  <div id="report-content">
+    <div class="card"><div class="card-title">Today — ${istDate(new Date())}</div>
+      <div class="mg mg-2" style="margin-bottom:10px">
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent)">₹${total.toLocaleString('en-IN')}</div><div style="font-size:11px;color:var(--muted)">Total Sales</div></div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green)">₹${coll.toLocaleString('en-IN')}</div><div style="font-size:11px;color:var(--muted)">Collected</div></div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--purple)">${orders.length}</div><div style="font-size:11px;color:var(--muted)">Orders</div></div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--danger)">${rets.length}</div><div style="font-size:11px;color:var(--muted)">Returns</div></div>
+      </div>
+      <div class="row"><span style="font-size:13px">Gross Margin @8%</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green)">₹${Math.round(total*.08).toLocaleString('en-IN')}</span></div>
+      <div class="row"><span style="font-size:13px">Pending Collection</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--warn)">₹${(total-coll).toLocaleString('en-IN')}</span></div>
+    </div>
+    <div class="card"><div class="card-title">Order Log — IST Timestamps</div>
+      <div style="overflow-x:auto">
+      <table class="rtable">
+        <tr><th>ID</th><th>Shop</th><th>Rep</th><th>Time (IST)</th><th>Amt</th><th>Status</th></tr>
+        ${orders.map(o=>`<tr>
+          <td style="font-family:'IBM Plex Mono',monospace">${o.id}</td>
+          <td>${o.shop}</td><td>${o.rep}</td>
+          <td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px">${istDT(o.ts)}</td>
+          <td style="font-weight:700">₹${o.total}</td>
+          <td><span class="sbadge ${o.status==='delivered'?'sb-delivered':o.status==='return'?'sb-return':'sb-pending'}" style="font-size:10px">${o.status.toUpperCase()}</span></td>
+        </tr>`).join('')}
+      </table></div>
+    </div>
+  </div>`;
+}
+
+function rTab(t,el){
+  document.querySelectorAll('#owner-content .stab').forEach(s=>s.classList.remove('on'));
+  if(el) el.classList.add('on');
+  const orders=LS.get('orders',[]);
+  let html='';
+  if(t==='custom'){
+    html=`<div class="card"><div class="card-title">Custom Date Range</div>
+      <div class="mg mg-2" style="margin-bottom:10px">
+        <div class="field" style="margin:0"><label>From</label><input type="date" id="r-from"/></div>
+        <div class="field" style="margin:0"><label>To</label><input type="date" id="r-to"/></div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="genCustomReport()">📊 Generate Report</button>
+      <div id="custom-report-out"></div>
+    </div>`;
+  } else if(t==='brand'){
+    const bmap={};orders.forEach(o=>{if(!bmap[o.brand])bmap[o.brand]={name:o.brandName,rev:0,orders:0,shops:new Set()};bmap[o.brand].rev+=o.total;bmap[o.brand].orders++;bmap[o.brand].shops.add(o.shop);});
+    html=`<div class="card"><div class="card-title">Brand-wise Sales</div><div style="overflow-x:auto"><table class="rtable"><tr><th>Brand</th><th>Orders</th><th>Shops</th><th>Revenue</th><th>Margin @8%</th></tr>${Object.values(bmap).map(b=>`<tr><td style="font-weight:700">${b.name}</td><td>${b.orders}</td><td>${b.shops.size}</td><td style="font-weight:700;color:var(--accent)">₹${b.rev.toLocaleString('en-IN')}</td><td style="color:var(--green)">₹${Math.round(b.rev*.08).toLocaleString('en-IN')}</td></tr>`).join('')}</table></div></div>`;
+  } else if(t==='rep'){
+    const rmap={};orders.forEach(o=>{if(!rmap[o.rep])rmap[o.rep]={orders:0,rev:0,shops:new Set()};rmap[o.rep].orders++;rmap[o.rep].rev+=o.total;rmap[o.rep].shops.add(o.shop);});
+    html=`<div class="card"><div class="card-title">Rep Performance</div><div style="overflow-x:auto"><table class="rtable"><tr><th>Rep</th><th>Orders</th><th>Shops</th><th>Sales</th></tr>${Object.entries(rmap).map(([r,d])=>`<tr><td style="font-weight:700">${r}</td><td>${d.orders}</td><td>${d.shops.size}</td><td style="font-weight:700;color:var(--accent)">₹${d.rev.toLocaleString('en-IN')}</td></tr>`).join('')}</table></div></div>`;
+  } else if(t==='driver'){
+    html=`<div class="card"><div class="card-title">Driver Report</div><div style="overflow-x:auto"><table class="rtable"><tr><th>Driver</th><th>Stops</th><th>Delivered</th><th>Value</th></tr>${DRIVERS_META.map(d=>{const dOrds=orders.filter(o=>o.assignedDriver===d.id);const done=dOrds.filter(o=>o.status==='delivered').length;return`<tr><td style="font-weight:700;color:${d.color}">${d.name}</td><td>${dOrds.length}</td><td>${done}/${dOrds.length}</td><td style="font-weight:700">₹${dOrds.reduce((s,o)=>s+o.total,0).toLocaleString('en-IN')}</td></tr>`;}).join('')}</table></div></div>`;
+  }
+  document.getElementById('report-content').innerHTML=html;
+}
+
+function genCustomReport(){
+  const orders=LS.get('orders',[]);
+  const total=orders.reduce((s,o)=>s+o.total,0);
+  document.getElementById('custom-report-out').innerHTML=`<div class="divider"></div>
+    <div class="row"><span>Total Sales</span><span style="font-weight:700;color:var(--accent)">₹${total.toLocaleString('en-IN')}</span></div>
+    <div class="row"><span>Orders</span><span style="font-weight:700">${orders.length}</span></div>
+    <div class="row"><span>Margin @8%</span><span style="font-weight:700;color:var(--green)">₹${Math.round(total*.08).toLocaleString('en-IN')}</span></div>`;
+}
+
+// OWNER INWARD
+function renderOwnerInward(){
+  renderInwardContent('owner-content');
+}
+
+// OWNER STOCK
+function renderOwnerStock(){
+  const brands=LS.get('brands',{});
+  document.getElementById('owner-content').innerHTML=Object.entries(brands).map(([k,b])=>`
+  <div class="card" style="border-left:3px solid ${b.color}">
+    <div class="card-title" style="color:${b.color}">${b.icon} ${b.name}</div>
+    ${b.skus.map(s=>{
+      const pct=Math.min(100,(s.stock/200)*100);
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center">
+          <span>${s.name}</span>
+          <span class="${s.stock===0?'sk-out':s.stock<15?'sk-low':'sk-ok'}">${s.stock} units</span>
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${pct}%;background:${s.stock===0?'var(--danger)':s.stock<15?'var(--warn)':'var(--green)'}"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace">Barcode: ${s.barcode}</div>
+      </div>`;
+    }).join('')}
+  </div>`).join('');
+}
+
+// OWNER TEAM
+function renderOwnerTeam(){
+  const users=LS.get('users',{});
+  const brands=LS.get('brands',{});
+  document.getElementById('owner-content').innerHTML=`
+  <div class="card c-accent">
+    <div class="card-title">Add Team Member</div>
+    <div class="field"><label>Full Name</label><input type="text" id="nm-name" placeholder="Full name" oninput="autoCap(this)"/></div>
+    <div class="field"><label>Mobile Number</label><input type="tel" id="nm-mob" maxlength="10" placeholder="10-digit mobile" oninput="this.value=this.value.replace(/\\D/g,'')"/></div>
+    <div class="field"><label>Role</label>
+      <select id="nm-role" onchange="toggleTeamFields()">
+        <option value="rep">Sales Rep</option>
+        <option value="driver">Driver</option>
+        <option value="loader">Loader / Warehouse</option>
+      </select>
+    </div>
+    <div id="brand-assign-section">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Assign Brands <span style="color:var(--accent)">(select one or more)</span></div>
+      <div id="brand-checks" style="background:var(--surface2);border-radius:10px;padding:12px;border:1.5px solid var(--border)">
+        ${Object.entries(brands).map(([k,b])=>`
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0;border-bottom:1px solid var(--border)">
+          <input type="checkbox" id="bc-${k}" value="${k}" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer"/>
+          <span>${b.icon} ${b.name}</span>
+        </label>`).join('')}
+      </div>
+    </div>
+    <div id="zone-assign-section" style="display:none" class="field"><label>Primary Zone</label>
+      <select id="nm-zone">
+        <option value="A">Zone A — Thane West</option>
+        <option value="B">Zone B — Thane East</option>
+        <option value="C">Zone C — Ghodbunder</option>
+        <option value="D">Zone D — Wagle Estate</option>
+        <option value="ALL">All Zones (Flexible)</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="createMember()">✅ Create & Generate PIN</button>
+    <div id="new-pin-display" style="display:none;background:#d1fae5;border-radius:10px;padding:14px;text-align:center;margin-top:10px">
+      <div style="font-size:12px;color:var(--muted)">PIN generated for <b id="npd-name"></b></div>
+      <div style="font-family:'Syne',sans-serif;font-size:34px;font-weight:800;letter-spacing:8px;color:var(--green);margin:8px 0" id="npd-pin">——</div>
+      <div style="font-size:11px;color:var(--muted)">Share with team member. They can change PIN after first login.</div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Sales Reps</div>
+  ${Object.entries(users).filter(([m,u])=>u.role==='rep').map(memberCard).join('')||'<div class="card" style="color:var(--muted);font-size:13px">No reps added</div>'}
+  <div class="sec-hdr">Drivers & Loaders</div>
+  ${Object.entries(users).filter(([m,u])=>u.role==='driver'||u.role==='loader').map(memberCard).join('')||'<div class="card" style="color:var(--muted);font-size:13px">No drivers/loaders added</div>'}`;
+}
+
+function memberCard([mob,u]){
+  const brands=LS.get('brands',{});
+  return `<div class="card" style="border-left:3px solid ${u.color||'#888'}">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="width:38px;height:38px;border-radius:50%;background:${u.color||'#888'};color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${u.name.charAt(0)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px">${u.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${mob} · ${u.role.toUpperCase()}</div>
+        ${u.role==='rep'&&u.brands?.length
+          ?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${u.brands.map(b=>`<span style="background:${brands[b]?.color||'#888'}15;color:${brands[b]?.color||'#888'};font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;border:1px solid ${brands[b]?.color||'#888'}30">${brands[b]?.icon||''} ${brands[b]?.name||b}</span>`).join('')}</div>`
+          :`<div style="font-size:11px;color:var(--muted);margin-top:3px">${u.zone?'Zone '+u.zone:''} ${u.canDrive?'· Can Drive':''}</div>`}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="editMemberModal('${mob}')">✏️ Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetMemberPin('${mob}')">🔑 PIN</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleTeamFields(){
+  const role=document.getElementById('nm-role').value;
+  document.getElementById('brand-assign-section').style.display=role==='rep'?'block':'none';
+  document.getElementById('zone-assign-section').style.display=(role==='driver'||role==='loader')?'block':'none';
+}
+
+function createMember(){
+  const name=document.getElementById('nm-name').value.trim();
+  const mob=document.getElementById('nm-mob').value.trim();
+  const role=document.getElementById('nm-role').value;
+  const zone=document.getElementById('nm-zone')?.value;
+  if(!name){toast('Enter full name');return;}
+  if(mob.length!==10){toast('Enter valid 10-digit mobile');return;}
+  let brands=[];
+  if(role==='rep'){
+    brands=Object.keys(LS.get('brands',{})).filter(k=>document.getElementById('bc-'+k)?.checked);
+    if(!brands.length){toast('Select at least one brand for rep');return;}
+  }
+  const users=LS.get('users',{});
+  if(users[mob]){toast('Mobile already registered');return;}
+  const pin=Math.floor(100000+Math.random()*900000).toString();
+  const colors=['#2563eb','#059669','#7c3aed','#dc2626','#d97706','#0891b2'];
+  users[mob]={name,role,pin,brands,zone:zone||undefined,canDrive:role==='loader'||role==='driver',color:colors[Math.floor(Math.random()*colors.length)],lastLat:null,lastLng:null,lastSeen:''};
+  LS.set('users',users);
+  document.getElementById('npd-name').textContent=name;
+  document.getElementById('npd-pin').textContent=pin;
+  document.getElementById('new-pin-display').style.display='block';
+  document.getElementById('nm-name').value='';
+  document.getElementById('nm-mob').value='';
+  Object.keys(LS.get('brands',{})).forEach(k=>{const el=document.getElementById('bc-'+k);if(el)el.checked=false;});
+  toast(`✅ ${name} added · PIN: ${pin}`);
+}
+
+function resetMemberPin(mob){
+  const users=LS.get('users',{});
+  if(!users[mob]) return;
+  const pin=Math.floor(100000+Math.random()*900000).toString();
+  users[mob].pin=pin;
+  LS.set('users',users);
+  document.getElementById('npd-name').textContent=users[mob].name+' (Reset)';
+  document.getElementById('npd-pin').textContent=pin;
+  document.getElementById('new-pin-display').style.display='block';
+  toast(`🔑 New PIN for ${users[mob].name}: ${pin}`);
+}
+
+function editMemberModal(mob){
+  const users=LS.get('users',{});
+  const brands=LS.get('brands',{});
+  const u=users[mob];
+  if(!u||u.role==='owner') return;
+  document.getElementById('mm-title').textContent='Edit: '+u.name;
+  let html=`<div class="field"><label>Name</label><input type="text" id="em-name" value="${u.name}" oninput="autoCap(this)"/></div>`;
+  if(u.role==='rep'){
+    html+=`<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Assigned Brands</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;border:1.5px solid var(--border);margin-bottom:14px">
+      ${Object.entries(brands).map(([k,b])=>`
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0;border-bottom:1px solid var(--border)">
+        <input type="checkbox" id="em-bc-${k}" value="${k}" ${u.brands?.includes(k)?'checked':''} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer"/>
+        <span>${b.icon} ${b.name}</span>
+      </label>`).join('')}
+    </div>`;
+  }
+  html+=`<button class="btn btn-primary btn-block" onclick="saveMemberEdit('${mob}')">💾 Save</button>`;
+  document.getElementById('mm-content').innerHTML=html;
+  showModal('member-modal');
+}
+
+function saveMemberEdit(mob){
+  const users=LS.get('users',{});
+  const u=users[mob];if(!u) return;
+  u.name=document.getElementById('em-name').value.trim()||u.name;
+  if(u.role==='rep'){
+    u.brands=Object.keys(LS.get('brands',{})).filter(k=>document.getElementById('em-bc-'+k)?.checked);
+  }
+  LS.set('users',users);
+  closeModal('member-modal');
+  toast('✅ Member updated');
+  renderOwnerTeam();
+}
+
+// ============================================================
+// SALES REP PAGE
+// ============================================================
+function renderSales(){
+  const pg=document.getElementById('page-sales');
+  const cutoff=isCutoff();
+  const user=CU;
+  pg.innerHTML=`
+  ${cutoff
+    ?'<div class="cutoff-banner"><span class="cb-icon">🔒</span><div><div class="cb-title">Cutoff Active — Orders Locked</div><div class="cb-sub">No new orders until next day</div></div></div>'
+    :'<div class="cutoff-banner open"><span class="cb-icon">🟢</span><div><div class="cb-title">Orders Open</div><div class="cb-sub">Accepting orders until 3:00 PM today</div></div></div>'}
+  <div class="stabs" id="sales-stabs">
+    <div class="stab on" onclick="sTab('new',this)">New Order</div>
+    <div class="stab" onclick="sTab('stock',this)">Stock</div>
+    <div class="stab" onclick="sTab('myorders',this)">My Orders</div>
+  </div>
+  <div id="sales-content"></div>`;
+  sTab('new');
+}
+
+function sTab(t,el){
+  document.querySelectorAll('#sales-stabs .stab').forEach(s=>s.classList.remove('on'));
+  if(el) el.classList.add('on');
+  else{const found=document.querySelectorAll('#sales-stabs .stab');found.forEach((s,i)=>{if(['new','stock','myorders'][i]===t)s.classList.add('on');});}
+  if(t==='new') renderNewOrder();
+  else if(t==='stock') renderRepStock();
+  else if(t==='myorders') renderMyOrders();
+}
+
+let orderCart={};
+let currentGPS=null;
+
+function renderNewOrder(){
+  if(isCutoff()){document.getElementById('sales-content').innerHTML='<div class="card c-danger" style="text-align:center;padding:24px"><div style="font-size:32px">🔒</div><div style="font-weight:700;margin-top:8px">Cutoff Active</div><div style="font-size:13px;color:var(--muted);margin-top:4px">New orders will be accepted tomorrow morning</div></div>';return;}
+  const brands=LS.get('brands',{});
+  const userBrands=CU.brands||Object.keys(brands);
+  orderCart={};currentGPS=null;capturedPhotoB64='';activeBrandTabs=[];currentSkuBrand='';
+  document.getElementById('sales-content').innerHTML=`
+  <div class="card c-accent">
+    <div class="card-title">Step 1 — Select Brand(s)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap brand(s) to add items. Multiple brands = single customer bill.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="brand-pills">
+      ${userBrands.map(k=>{const b=brands[k];return`<button onclick="toggleBrandTab('${k}',this)" id="btab-${k}"
+        style="padding:8px 14px;border-radius:20px;border:2px solid ${b?.color||'#888'};background:#fff;color:${b?.color||'#888'};font-weight:700;font-size:13px;cursor:pointer;transition:all .2s">
+        ${b?.icon||''} ${b?.name||k}</button>`;}).join('')}
+    </div>
+    <div id="active-brand-label" style="font-size:12px;color:var(--muted)">Tap a brand above to start adding items</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">Logged in as: <b style="color:var(--accent)">${CU.name}</b></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 2 — Capture Shop Photo</div>
+    <div class="photo-zone" onclick="document.getElementById('shop-photo-inp').click()">
+      <div class="pz-icon">📷</div>
+      <div class="pz-text">Tap to photograph shop signboard<br><span style="font-size:11px">AI reads Hindi / Marathi / English</span></div>
+    </div>
+    <input type="file" id="shop-photo-inp" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+    <img id="shop-preview"/>
+    <div class="ai-box" id="ai-box"><div class="ai-label">⚡ AI Detected</div><div id="ai-text"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 3 — Customer Details</div>
+    <div class="field"><label>Shop Name</label><input type="text" id="s-name" placeholder="Auto-filled or type" oninput="autoCap(this)" style="text-transform:capitalize"/></div>
+    <div class="field"><label>Owner / Contact</label><input type="text" id="s-owner" placeholder="Shop owner name" oninput="autoCap(this)"/></div>
+    <div class="field"><label>Shop Type</label>
+      <select id="s-type">
+        <option>Kirana / General Store</option><option>Medical / Chemist</option>
+        <option>Bakery / Sweet Shop</option><option>Supermarket</option>
+        <option>Hotel / Restaurant</option><option>Pan / Cigarette Shop</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>GST Number <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional — for GST invoice)</span></label>
+      <input type="text" id="s-gst" placeholder="27AAAAA0000A1Z5" maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 4 — GPS Location</div>
+    <div class="gps-box">
+      <div class="gps-dot" id="gps-dot"></div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px" id="gps-status">Location not captured</div>
+        <div style="font-size:11px;color:var(--muted)" id="gps-sub">Tap Capture to lock GPS coordinates</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="captureGPS()">📍 Capture</button>
+    </div>
+    <div id="gps-coords" style="display:none">
+      <div class="coord-row">
+        <div class="coord-chip"><div class="cl">LATITUDE</div><div class="cv" id="lat-val">—</div></div>
+        <div class="coord-chip"><div class="cl">LONGITUDE</div><div class="cv" id="lng-val">—</div></div>
+      </div>
+      <div style="margin-top:8px;text-align:center">
+        <a id="gps-verify" href="#" target="_blank" style="font-size:12px;color:var(--accent);font-weight:600">🗺️ Verify on Google Maps</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="sku-card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" id="sku-card-title" style="margin:0">Step 5 — Items</div>
+      <div id="sku-brand-switcher" style="display:flex;gap:4px"></div>
+    </div>
+    <div style="position:relative;margin-bottom:10px">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span>
+      <input type="text" id="sku-search" placeholder="Search items..." oninput="filterSKUs()"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px 10px 38px;font-size:16px;outline:none;font-family:'IBM Plex Sans',sans-serif;transition:border .2s"
+        onfocus="this.style.borderColor='var(--accent)';this.scrollIntoView({behavior:'smooth',block:'start'})" 
+        onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+    <div id="sku-list"></div>
+  </div>
+
+  <div class="card" id="summary-card" style="display:none">
+    <div class="card-title">Order Summary</div>
+    <div id="summary-lines"></div>
+    <div class="divider"></div>
+    <div class="row"><span style="font-weight:700;font-size:16px">Total</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)" id="summary-total">₹0</span></div>
+    <div id="gst-preview" style="display:none;font-size:12px;color:var(--muted);margin-top:4px"></div>
+  </div>
+
+  <button class="btn btn-primary btn-block" id="submit-order-btn" onclick="submitOrder()" disabled style="margin-top:4px">✅ Submit Order</button>`;
+
+  if(userBrands.length===1){loadSKUs();}
+}
+
+let activeBrandTabs=[]; // brands currently selected for this order
+
+function toggleBrandTab(brandKey, btn){
+  haptic('tap');
+  const brands=LS.get('brands',{});
+  const b=brands[brandKey];
+  if(!b) return;
+  const idx=activeBrandTabs.indexOf(brandKey);
+  if(idx>-1){
+    activeBrandTabs.splice(idx,1);
+    btn.style.background='#fff';
+    btn.style.color=b.color;
+  } else {
+    activeBrandTabs.push(brandKey);
+    btn.style.background=b.color;
+    btn.style.color='#fff';
+  }
+  const lbl=document.getElementById('active-brand-label');
+  if(activeBrandTabs.length===0){
+    lbl.textContent='Tap a brand above to start adding items';
+    document.getElementById('sku-card').style.display='none';
+  } else {
+    lbl.innerHTML=activeBrandTabs.map(k=>`<span style="color:${brands[k].color};font-weight:700">${brands[k].icon} ${brands[k].name}</span>`).join(' + ');
+    loadSKUs(activeBrandTabs[activeBrandTabs.length-1]); // show last selected brand's SKUs
+    updateBrandSwitcher();
+  }
+}
+
+function updateBrandSwitcher(){
+  const brands=LS.get('brands',{});
+  const sw=document.getElementById('sku-brand-switcher');
+  if(!sw) return;
+  sw.innerHTML=activeBrandTabs.map(k=>`<button onclick="loadSKUs('${k}')" id="sw-${k}"
+    style="padding:4px 10px;border-radius:12px;border:2px solid ${brands[k].color};background:#fff;color:${brands[k].color};font-size:11px;font-weight:700;cursor:pointer">
+    ${brands[k].icon}</button>`).join('');
+}
+
+function loadSKUs(brandKey){
+  const brands=LS.get('brands',{});
+  if(!brandKey&&activeBrandTabs.length) brandKey=activeBrandTabs[0];
+  if(!brandKey) return;
+  // Mark active tab in switcher
+  activeBrandTabs.forEach(k=>{
+    const sw=document.getElementById('sw-'+k);
+    if(sw) sw.style.background=k===brandKey?brands[k].color:'#fff';
+    if(sw) sw.style.color=k===brandKey?'#fff':brands[k].color;
+  });
+  const b=brands[brandKey];
+  if(!b) return;
+  document.getElementById('sku-card').style.display='block';
+  document.getElementById('sku-card-title').textContent=`${b.icon} ${b.name} — Items`;
+  document.getElementById('sku-search').value='';
+  renderSKUList(b.skus,'',brandKey);
+}
+
+let currentSkuBrand='';
+
+function renderSKUList(skus, query, brandKey){
+  if(brandKey) currentSkuBrand=brandKey;
+  const filtered=query
+    ?skus.filter(s=>s.name.toLowerCase().includes(query.toLowerCase()))
+    :skus;
+  document.getElementById('sku-list').innerHTML=filtered.map(s=>{
+    const isOut=s.stock===0,isLow=s.stock>0&&s.stock<15;
+    const cartKey=currentSkuBrand+'_'+s.id;
+    return `<div class="sku-row">
+      <div class="sku-info">
+        <div class="sku-name">${s.name}</div>
+        <div class="sku-meta"><span>₹${s.price}/${s.unit}</span><span class="${isOut?'sk-out':isLow?'sk-low':'sk-ok'}">${isOut?'OUT OF STOCK':isLow?'LOW: '+s.stock:'IN STOCK: '+s.stock}</span></div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="chgQty('${cartKey}',-1,'${s.id}','${currentSkuBrand}')" ${isOut?'disabled':''}>−</button>
+        <span class="qval" id="q-${cartKey}">${orderCart[cartKey]||0}</span>
+        <button class="qbtn" onclick="chgQty('${cartKey}',1,'${s.id}','${currentSkuBrand}')" ${isOut?'disabled':''}>+</button>
+      </div>
+    </div>`;
+  }).join('')||`<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">No items match "${query}"</div>`;
+}
+
+function filterSKUs(){
+  const brands=LS.get('brands',{});
+  if(!currentSkuBrand||!brands[currentSkuBrand]) return;
+  const query=document.getElementById('sku-search')?.value||'';
+  renderSKUList(brands[currentSkuBrand].skus, query, currentSkuBrand);
+}
+
+function chgQty(cartKey,d,skuId,brandKey){
+  haptic('tap');
+  const brands=LS.get('brands',{});
+  const b=brands[brandKey];
+  if(!b) return;
+  const s=b.skus.find(x=>x.id===skuId);
+  if(!s) return;
+  if(!orderCart[cartKey])orderCart[cartKey]=0;
+  orderCart[cartKey]=Math.max(0,Math.min(s.stock,orderCart[cartKey]+d));
+  document.getElementById('q-'+cartKey).textContent=orderCart[cartKey];
+  updateSummary();
+}
+
+function updateSummary(){
+  const brands=LS.get('brands',{});
+  const gstNum=document.getElementById('s-gst')?.value.trim();
+  let total=0,lines='';
+  // Multi-brand cart: cartKey = brandKey_skuId
+  Object.entries(orderCart).forEach(([cartKey,qty])=>{
+    if(qty<=0) return;
+    const [brandKey,...rest]=cartKey.split('_');
+    const skuId=rest.join('_');
+    const b=brands[brandKey];
+    if(!b) return;
+    const s=b.skus.find(x=>x.id===skuId);
+    if(!s) return;
+    const amt=s.price*qty;
+    total+=amt;
+    lines+=`<div class="row">
+      <span><span style="color:${b.color};font-size:11px">${b.icon}</span> ${s.name} ×${qty}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-weight:700">₹${amt}</span>
+    </div>`;
+  });
+  const sc=document.getElementById('summary-card');
+  sc.style.display=total>0?'block':'none';
+  document.getElementById('summary-lines').innerHTML=lines||'';
+  document.getElementById('summary-total').textContent='₹'+total;
+  const gp=document.getElementById('gst-preview');
+  if(gstNum&&total>0){const g=Math.round(total*.12);gp.innerHTML=`GST @12%: ₹${g} &nbsp;|&nbsp; <b>Grand Total: ₹${total+g}</b>`;gp.style.display='block';}else{gp.style.display='none';}
+  document.getElementById('submit-order-btn').disabled=total===0;
+}
+
+async function handlePhoto(e){
+  const file=e.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const prev=document.getElementById('shop-preview');
+    prev.src=ev.target.result;
+    prev.style.display='block';
+    // Clear any photo error styling
+    const pz=document.querySelector('.photo-zone');
+    if(pz){pz.style.borderColor='';document.querySelectorAll('.val-err').forEach(e=>{if(e.textContent.includes('photo'))e.remove();});}
+    const box=document.getElementById('ai-box');
+    const txt=document.getElementById('ai-text');
+    box.style.display='block';
+    txt.innerHTML='<span class="spin"></span> Reading signboard...';
+
+    // Resize image if too large (API limit ~5MB base64)
+    let imageData=ev.target.result;
+    let mediaType=file.type||'image/jpeg';
+    if(imageData.length>4000000){
+      try{
+        const img=new Image();
+        await new Promise(r=>{img.onload=r;img.src=imageData;});
+        const canvas=document.createElement('canvas');
+        const scale=Math.min(1,1200/Math.max(img.width,img.height));
+        canvas.width=Math.round(img.width*scale);
+        canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        imageData=canvas.toDataURL('image/jpeg',0.85);
+        mediaType='image/jpeg';
+      }catch(e){}
+    }
+    const b64=imageData.split(',')[1];
+    // Store compressed photo with order (thumbnail ~50KB)
+    capturedPhotoB64=imageData;
+
+    try{
+      const apiKey=LS.get('anthropic_key','');
+      if(!apiKey){
+        // Fallback: Free OCR using Tesseract.js (no API key needed)
+        txt.innerHTML='<span class="spin"></span> Reading with free OCR (Tesseract)...';
+        try{
+          const ocrText=await ocrWithTesseract(imageData);
+          const parsed=parseOCRText(ocrText);
+          if(parsed&&parsed.shop_name_english){
+            const nm=parsed.shop_name_english;
+            const inp=document.getElementById('s-name');
+            if(inp){inp.value=nm;inp.style.borderColor='var(--green)';}
+            txt.innerHTML=`<div style="display:flex;align-items:flex-start;gap:8px">
+              <span style="font-size:20px">✅</span>
+              <div>
+                <div style="font-weight:700;font-size:14px">${nm}</div>
+                ${parsed.shop_name_original?`<div style="font-size:12px;color:var(--muted)">${parsed.shop_name_original}</div>`:''}
+                <div style="font-size:12px">Type: ${parsed.shop_type}</div>
+                ${parsed.phone?`<div style="font-size:12px">📞 ${parsed.phone}</div>`:''}
+                <div style="font-size:11px;color:var(--warn)">Free OCR · Add Anthropic key in ⚙️ for better accuracy</div>
+              </div>
+            </div>`;
+          } else {
+            txt.innerHTML='⚙️ OCR could not read text. <b>For better results: Add Anthropic API key in ⚙️ Settings.</b> Fill manually for now.';
+          }
+        }catch(ocrErr){
+          txt.innerHTML='⚙️ <b>No API key set.</b> Tap ⚙️ → paste Anthropic API key for AI reading. Fill manually for now.';
+        }
+        return;
+      }
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:500,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:mediaType,data:b64}},
+            {type:'text',text:`You are reading a photo of an Indian retail shop front or signboard.
+
+The text on the signboard may be in:
+- Hindi (Devanagari script like न्यू भारत ट्रेडिंग कंपनी)
+- Marathi (Devanagari)  
+- English
+- Gujarati
+- Mixed scripts
+
+INSTRUCTIONS:
+1. Read ALL visible text on the signboard carefully
+2. Identify the main shop name (usually largest text)
+3. Transliterate Devanagari to English (e.g. न्यू भारत → New Bharat)
+4. Identify shop type from context
+5. Extract phone numbers if visible
+
+Return ONLY valid JSON with no markdown fences:
+{"shop_name_english":"New Bharat Trading Company","shop_name_original":"न्यू भारत ट्रेडिंग कंपनी","shop_type":"Kirana / General Store","phone":"9833979800","address":"Shop No 2, Old Bhaji Market","confidence":"high"}`
+          }
+        ]}]})
+      });
+      const data=await resp.json();
+      if(data.error){
+        txt.innerHTML=`⚠️ API error: ${data.error.message||'Unknown'}. Fill manually.`;
+        return;
+      }
+      const rawText=(data.content&&data.content[0]&&data.content[0].text)||'';
+      let p=null;
+      try{
+        // Extract JSON even if wrapped in text
+        const jsonMatch=rawText.match(/\{[\s\S]*\}/);
+        if(jsonMatch) p=JSON.parse(jsonMatch[0]);
+      }catch(e){p=null;}
+
+      if(p&&(p.shop_name_english||p.shop_name_original)){
+        const nm=p.shop_name_english||p.shop_name_original||'';
+        // AUTO-FILL fields
+        if(nm){
+          const inp=document.getElementById('s-name');
+          if(inp){inp.value=nm;inp.style.borderColor='var(--green)';}
+        }
+        if(p.phone){
+          // Auto-fill owner field with phone if no name
+          const own=document.getElementById('s-owner');
+          if(own&&!own.value) own.value=p.phone;
+        }
+        // Auto-select shop type if matched
+        if(p.shop_type){
+          const sel=document.getElementById('s-type');
+          if(sel){
+            const opts=[...sel.options];
+            const match=opts.find(o=>o.text.toLowerCase().includes((p.shop_type||'').toLowerCase().split('/')[0].trim()));
+            if(match) sel.value=match.value;
+          }
+        }
+        txt.innerHTML=`
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:20px">✅</span>
+            <div>
+              <div style="font-weight:700;font-size:14px">${nm}</div>
+              ${p.shop_name_original&&p.shop_name_original!==nm?`<div style="color:var(--muted);font-size:12px">Original: ${p.shop_name_original}</div>`:''}
+              ${p.shop_type?`<div style="font-size:12px">Type: ${p.shop_type}</div>`:''}
+              ${p.phone?`<div style="font-size:12px">📞 ${p.phone}</div>`:''}
+              ${p.address?`<div style="font-size:12px;color:var(--muted)">📍 ${p.address}</div>`:''}
+              <div style="font-size:11px;color:${p.confidence==='high'?'var(--green)':'var(--warn)'}">Confidence: ${p.confidence||'medium'}</div>
+            </div>
+          </div>`;
+      }else{
+        txt.innerHTML='⚠️ Could not read signboard text clearly.<br><span style="font-size:12px;color:var(--muted)">Raw: '+rawText.slice(0,100)+'</span><br>Please fill manually.';
+      }
+    }catch(err){
+      console.error('Photo AI error:',err);
+      txt.innerHTML='⚠️ AI read failed: '+err.message+'<br><span style="font-size:12px;color:var(--muted)">Check internet connection. Fill details manually.</span>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function captureGPS(){
+  const dot=document.getElementById('gps-dot');
+  const stat=document.getElementById('gps-status');
+  const sub=document.getElementById('gps-sub');
+  dot.className='gps-dot seeking';
+  stat.textContent='Getting location...';
+  const set=(lat,lng,src)=>{
+    currentGPS={lat,lng};
+    haptic('success');
+    dot.className='gps-dot on';
+    stat.textContent='✅ Location Captured'+src;
+    sub.textContent='Tap Google Maps link below to verify';
+    document.getElementById('lat-val').textContent=lat.toFixed(6);
+    document.getElementById('lng-val').textContent=lng.toFixed(6);
+    document.getElementById('gps-coords').style.display='block';
+    document.getElementById('gps-verify').href=`https://maps.google.com/?q=${lat},${lng}`;
+    // Update rep last location
+    const users=LS.get('users',{});
+    if(users[CU.mobile]){users[CU.mobile].lastLat=lat;users[CU.mobile].lastLng=lng;users[CU.mobile].lastSeen=istNow();LS.set('users',users);}
+  };
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      p=>set(p.coords.latitude,p.coords.longitude,''),
+      ()=>set(19.1975+Math.random()*.015,72.9615+Math.random()*.015,' (demo)')
+    );
+  }else{set(19.1975,72.9615,' (demo)');}
+}
+
+// Track captured photo as base64 thumbnail (stored with order)
+let capturedPhotoB64='';
+
+function clearValidationErrors(){
+  document.querySelectorAll('.val-err').forEach(e=>e.remove());
+  document.querySelectorAll('.field-invalid').forEach(e=>e.classList.remove('field-invalid'));
+}
+
+function showFieldError(fieldId, msg){
+  const el=document.getElementById(fieldId);
+  if(!el) return;
+  el.classList.add('field-invalid');
+  const err=document.createElement('div');
+  err.className='val-err';
+  err.textContent='⚠️ '+msg;
+  err.style.cssText='color:var(--danger);font-size:12px;margin-top:4px;font-weight:600';
+  el.parentNode.insertBefore(err, el.nextSibling);
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function submitOrder(){
+  clearValidationErrors();
+  let shopName=document.getElementById('s-name')?.value.trim();
+  const shopType=document.getElementById('s-type')?.value||'Kirana / General Store';
+  const gst=document.getElementById('s-gst')?.value.trim();
+  let hasErrors=false;
+
+  // VALIDATION 1: At least one brand selected
+  const primaryBrand=activeBrandTabs[0]||'';
+  if(!activeBrandTabs.length){toast('Select at least one brand first');return;}
+
+  // VALIDATION 2: Shop photo — mandatory in production, warning in test mode
+  if(!capturedPhotoB64){
+    const testMode=LS.get('test_mode',false);
+    if(!testMode){
+      const photoCard=document.querySelector('.photo-zone');
+      if(photoCard){
+        const err=document.createElement('div');
+        err.className='val-err';
+        err.textContent='⚠️ Shop photo required. Enable Test Mode in ⚙️ Settings to skip.';
+        err.style.cssText='color:var(--danger);font-size:12px;margin-top:8px;font-weight:600;text-align:center';
+        photoCard.parentNode.appendChild(err);
+        photoCard.style.borderColor='var(--danger)';
+        photoCard.scrollIntoView({behavior:'smooth',block:'center'});
+        hasErrors=true;
+      }
+    }
+    // In test mode: proceed without photo (shopPhoto stays empty string)
+  }
+
+  // VALIDATION 3: GPS location — mandatory in production, auto-demo in test mode
+  if(!currentGPS){
+    const testMode=LS.get('test_mode',false);
+    if(testMode){
+      // Auto-assign Thane warehouse coords for testing
+      currentGPS={lat:19.1975+Math.random()*.005,lng:72.9615+Math.random()*.005};
+      const gpsEl=document.getElementById('gps-status');
+      if(gpsEl) gpsEl.textContent='📍 Demo GPS (Test Mode)';
+    } else {
+      const gpsBox=document.getElementById('gps-status');
+      if(gpsBox){
+        gpsBox.style.color='var(--danger)';
+        gpsBox.textContent='⚠️ GPS required — tap Capture (or enable Test Mode in ⚙️)';
+        document.querySelector('.gps-box')?.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+      hasErrors=true;
+    }
+  }
+
+  // VALIDATION 4: Either shop name OR shop type required
+  // If no name: auto-assign "ShopType + short GPS ref"
+  if(!shopName){
+    if(currentGPS){
+      // Smart auto-name: ShopType + GPS landmark approximation
+      const latStr=currentGPS.lat.toFixed(3);
+      const lngStr=currentGPS.lng.toFixed(3);
+      shopName=shopType+' ('+latStr+','+lngStr+')';
+      // Fill it back into the field so rep can see what was assigned
+      const nameInp=document.getElementById('s-name');
+      if(nameInp){
+        nameInp.value=shopName;
+        nameInp.style.borderColor='var(--warn)';
+        // Show info note
+        const note=document.createElement('div');
+        note.className='val-err';
+        note.style.cssText='color:var(--warn);font-size:12px;margin-top:4px;font-weight:600';
+        note.textContent='ℹ️ Auto-named from shop type + location. Edit if needed.';
+        nameInp.parentNode.insertBefore(note, nameInp.nextSibling);
+      }
+      // Don't block — auto-name is valid
+    } else {
+      // No name AND no GPS — can't auto-name either
+      if(!hasErrors){ // GPS error already shown
+        const nameInp=document.getElementById('s-name');
+        if(nameInp){
+          nameInp.classList.add('field-invalid');
+          const err=document.createElement('div');
+          err.className='val-err';
+          err.style.cssText='color:var(--danger);font-size:12px;margin-top:4px;font-weight:600';
+          err.textContent='⚠️ Enter shop name or capture GPS (for auto-naming)';
+          nameInp.parentNode.insertBefore(err, nameInp.nextSibling);
+        }
+        hasErrors=true;
+      }
+    }
+  }
+
+  if(hasErrors) return;
+
+  // VALIDATION 5: At least one item across all brands
+  const brands=LS.get('brands',{});
+  let items=[],total=0;
+  const brandsInOrder=new Set();
+  Object.entries(orderCart).forEach(([cartKey,qty])=>{
+    if(qty<=0) return;
+    const [brandKey,...rest]=cartKey.split('_');
+    const skuId=rest.join('_');
+    const b=brands[brandKey];
+    if(!b) return;
+    const s=b.skus.find(x=>x.id===skuId);
+    if(!s) return;
+    items.push({id:s.id,name:s.name,qty,price:s.price,brand:brandKey,brandName:b.name});
+    total+=s.price*qty;
+    brandsInOrder.add(brandKey);
+  });
+  if(!items.length){toast('Add at least one item in Step 5');return;}
+
+  // ALL VALID — deduct stock and submit
+  items.forEach(item=>{
+    const b=brands[item.brand];
+    if(b){const s=b.skus.find(x=>x.id===item.id);if(s)s.stock=Math.max(0,s.stock-item.qty);}
+  });
+  LS.set('brands',brands);
+
+  const orders=LS.get('orders',[]);
+  const oid='ORD'+Date.now().toString().slice(-5);
+  const addr=currentGPS?`${currentGPS.lat.toFixed(4)},${currentGPS.lng.toFixed(4)}`:'No GPS';
+  const brandList=[...brandsInOrder];
+  orders.push({
+    id:oid,
+    shop:shopName,
+    shopType:shopType,
+    brand:brandList[0],
+    brandName:brandList.map(k=>brands[k]?.name||k).join(' + '),
+    brands:brandList,
+    rep:CU.name,
+    repMob:String(CU.mobile),
+    items,total,
+    status:'pending',
+    assignedDriver:'',
+    routeSeq:0,
+    ts:new Date().toISOString(),
+    addr,
+    lat:currentGPS?.lat||19.1975,
+    lng:currentGPS?.lng||72.9615,
+    gst,
+    shopPhoto:capturedPhotoB64
+  });
+  LS.set('orders',orders);
+  capturedPhotoB64='';
+  haptic('success');
+  // Play success sound if enabled
+  if(LS.get('sound_enabled',false)){
+    try{const ac=new AudioContext();const o=ac.createOscillator();const g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.setValueAtTime(800,ac.currentTime);o.frequency.setValueAtTime(1000,ac.currentTime+0.1);g.gain.setValueAtTime(0.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);o.start(ac.currentTime);o.stop(ac.currentTime+0.3);}catch(e){}
+  }
+  // Confirmation overlay
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(5,150,105,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff';
+  overlay.innerHTML=`<div style="font-size:64px;animation:popIn .3s ease">✅</div>
+    <div style="font-family:Syne,sans-serif;font-size:22px;font-weight:800;margin-top:12px">Order Submitted!</div>
+    <div style="font-size:15px;opacity:.85;margin-top:6px">${shopName}</div>
+    <div style="font-family:IBM Plex Mono,monospace;font-size:18px;font-weight:700;margin-top:8px;background:rgba(255,255,255,.2);padding:8px 20px;border-radius:10px">${oid}</div>
+    <div style="font-size:13px;opacity:.7;margin-top:16px">Tap anywhere to continue</div>`;
+  overlay.onclick=()=>overlay.remove();
+  document.body.appendChild(overlay);
+  setTimeout(()=>overlay.remove(),2500);
+  renderNewOrder();
+}
+
+function renderRepStock(){
+  const brands=LS.get('brands',{});
+  const myBrands=CU.brands||Object.keys(brands);
+  document.getElementById('sales-content').innerHTML=myBrands.map(k=>{
+    const b=brands[k];if(!b) return '';
+    return `<div class="card" style="border-left:3px solid ${b.color}">
+      <div class="card-title" style="color:${b.color}">${b.icon} ${b.name}</div>
+      ${b.skus.map(s=>{
+        const pct=Math.min(100,(s.stock/200)*100);
+        const cls=s.stock===0?'sk-out':s.stock<15?'sk-low':'sk-ok';
+        const lbl=s.stock===0?'❌ Don\'t promise':s.stock<15?'⚠️ Limited — push if needed':'✅ Push this item';
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center">
+            <span>${s.name}</span><span class="${cls}">${s.stock} units</span>
+          </div>
+          <div class="pbar"><div class="pfill" style="width:${pct}%;background:${s.stock===0?'var(--danger)':s.stock<15?'var(--warn)':'var(--green)'}"></div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${lbl}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderMyOrders(){
+  // Today in IST (YYYY-MM-DD)
+  const todayIST=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+  const allOrders=LS.get('orders',[]);
+  // Filter: my orders, today only, sorted latest first
+  const orders=allOrders
+    .filter(o=>{
+      const isMine=String(o.repMob)===String(CU.mobile)||(CU.role==='owner');
+      const orderDate=new Date(o.ts).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+      return isMine && orderDate===todayIST;
+    })
+    .sort((a,b)=>new Date(b.ts)-new Date(a.ts)); // latest first
+  const totalToday=orders.reduce((s,o)=>s+o.total,0);
+  const delivered=orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  document.getElementById('sales-content').innerHTML=`
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <div style="flex:1;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
+      <div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:var(--accent)">₹${totalToday.toLocaleString('en-IN')}</div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Today's Sales</div>
+    </div>
+    <div style="flex:1;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
+      <div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:var(--green)">₹${delivered.toLocaleString('en-IN')}</div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Collected</div>
+    </div>
+  </div>
+  <button class="btn btn-ghost btn-block" onclick="openReportModal()" style="margin-bottom:12px">📊 Download My Report</button>
+  `+(orders.length?orders.map(o=>`
+  <div class="ord-card">
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      ${o.shopPhoto
+        ?`<img src="${o.shopPhoto}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">`
+        :`<div style="width:56px;height:56px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏪</div>`}
+      <div style="flex:1;min-width:0">
+        <div class="ord-shop">${o.shop}</div>
+        <div class="ord-meta" style="color:var(--muted);font-size:11px">${o.shopType||''}</div>
+        <div class="ord-meta">${o.brandName} · ${istDT(o.ts)}</div>
+        <div style="font-size:12px;margin-top:4px;color:var(--accent)">${o.items.map(i=>i.name+'×'+i.qty).join(' · ')}</div>
+        ${o.gst?`<div style="font-size:11px;color:var(--purple);margin-top:3px">🧾 GST: ${o.gst}</div>`:''}
+        <div style="margin-top:7px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="sbadge ${o.status==='pending'?'sb-pending':o.status==='delivered'?'sb-delivered':o.status==='return'?'sb-return':'sb-billed'}">${o.status.toUpperCase()}</span>
+          ${o.status==='pending'&&!isCutoff()?`<button class="btn btn-ghost btn-sm" onclick="openEditOrder('${o.id}')">✏️ Edit</button>`:o.status==='pending'&&isCutoff()?'<span style="font-size:11px;color:var(--danger);font-weight:600">🔒 Cutoff</span>':'<span style="font-size:11px;color:var(--muted)">Locked</span>'}
+          ${o.addr&&o.lat?`<a href="https://maps.google.com/?q=${o.lat},${o.lng}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:4px 8px;font-size:11px">🗺️</a>`:''}
+        </div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--accent);flex-shrink:0">₹${o.total}</div>
+    </div>
+  </div>`).join('')
+  :'<div class="card" style="text-align:center;color:var(--muted);padding:30px"><div style="font-size:32px;margin-bottom:8px">📋</div>No orders punched today</div>');
+}
+
+function openEditOrder(id){
+  const orders=LS.get('orders',[]);
+  const brands=LS.get('brands',{});
+  const o=orders.find(x=>x.id===id);if(!o) return;
+  editingOrderId=id;
+  const b=brands[o.brand];
+  let html=`
+  ${o.shopPhoto?`<img src="${o.shopPhoto}" style="width:100%;max-height:120px;object-fit:cover;border-radius:10px;margin-bottom:12px">`:''}
+  <div class="field">
+    <label>Shop Name</label>
+    <input type="text" id="edit-shop-name" value="${o.shop.replace(/"/g,'&quot;')}" oninput="autoCap(this)"
+      style="border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;width:100%;font-size:14px;outline:none"/>
+  </div>
+  <div class="field">
+    <label>Shop Type</label>
+    <select id="edit-shop-type" style="border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;width:100%;font-size:14px;background:#fff;outline:none">
+      <option ${o.shopType==='Kirana / General Store'?'selected':''}>Kirana / General Store</option>
+      <option ${o.shopType==='Medical / Chemist'?'selected':''}>Medical / Chemist</option>
+      <option ${o.shopType==='Bakery / Sweet Shop'?'selected':''}>Bakery / Sweet Shop</option>
+      <option ${o.shopType==='Supermarket'?'selected':''}>Supermarket</option>
+      <option ${o.shopType==='Hotel / Restaurant'?'selected':''}>Hotel / Restaurant</option>
+      <option ${o.shopType==='Pan / Cigarette Shop'?'selected':''}>Pan / Cigarette Shop</option>
+    </select>
+  </div>
+  <div class="card-title">Adjust Items</div>`;
+  b.skus.forEach(s=>{
+    const existing=o.items.find(i=>i.id===s.id);
+    const cur=existing?existing.qty:0;
+    html+=`<div class="sku-row">
+      <div class="sku-info"><div class="sku-name">${s.name}</div><div class="sku-meta"><span>₹${s.price}</span><span class="${s.stock===0?'sk-out':s.stock<15?'sk-low':'sk-ok'}">${s.stock} avail</span></div></div>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="editChgQty('${s.id}',-1)">−</button>
+        <span class="qval" id="eq-${s.id}">${cur}</span>
+        <button class="qbtn" onclick="editChgQty('${s.id}',1)">+</button>
+      </div>
+    </div>`;
+  });
+  html+=`<div style="font-weight:700;font-size:16px;margin-top:12px;text-align:right" id="edit-total">Total: ₹${o.total}</div>`;
+  document.getElementById('eom-content').innerHTML=html;
+  showModal('edit-order-modal');
+}
+
+function editChgQty(skuId,d){
+  const orders=LS.get('orders',[]);
+  const brands=LS.get('brands',{});
+  const o=orders.find(x=>x.id===editingOrderId);if(!o) return;
+  const s=brands[o.brand].skus.find(x=>x.id===skuId);
+  const el=document.getElementById('eq-'+skuId);
+  let cur=parseInt(el.textContent)||0;
+  cur=Math.max(0,Math.min(s.stock+cur,cur+d));
+  el.textContent=cur;
+  let tot=0;brands[o.brand].skus.forEach(sk=>{const qe=document.getElementById('eq-'+sk.id);if(qe)tot+=(parseInt(qe.textContent)||0)*sk.price;});
+  document.getElementById('edit-total').textContent='Total: ₹'+tot;
+}
+
+function saveEditOrder(){
+  const orders=LS.get('orders',[]);
+  const brands=LS.get('brands',{});
+  const o=orders.find(x=>x.id===editingOrderId);if(!o) return;
+  const b=brands[o.brand];
+  let items=[],total=0;
+  b.skus.forEach(s=>{const el=document.getElementById('eq-'+s.id);const qty=parseInt(el?.textContent)||0;if(qty>0){items.push({id:s.id,name:s.name,qty,price:s.price});total+=qty*s.price;}});
+  // Save shop name and type edits too
+  const newName=document.getElementById('edit-shop-name')?.value.trim();
+  const newType=document.getElementById('edit-shop-type')?.value;
+  if(newName) o.shop=newName;
+  if(newType) o.shopType=newType;
+  o.items=items;o.total=total;
+  LS.set('orders',orders);
+  closeModal('edit-order-modal');
+  toast('✅ Order updated — '+o.shop);
+  renderMyOrders();
+}
+
+// ============================================================
+// DRIVER PAGE
+// ============================================================
+function renderDriver(){
+  const pg=document.getElementById('page-driver');
+  // find driver ID from users
+  const users=LS.get('users',{});
+  const u=users[CU.mobile];
+  // map user to driver meta
+  const drvMap={'9999999992':'D1','9999999994':'D2','9999999996':'D3'};
+  const myDrvId=drvMap[CU.mobile]||'D1';
+  const orders=LS.get('orders',[]).filter(o=>o.assignedDriver===myDrvId).sort((a,b)=>a.routeSeq-b.routeSeq);
+  const done=orders.filter(o=>o.status==='delivered').length;
+  const returned=orders.filter(o=>o.status==='return').length;
+  const pending=orders.filter(o=>o.status!=='delivered'&&o.status!=='return').length;
+  const totalVal=orders.reduce((s,o)=>s+o.total,0);
+  const collVal=orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+
+  pg.innerHTML=`
+  <div class="stabs" id="driver-stabs">
+    <div class="stab on" onclick="dTab('route',this)">My Route</div>
+    <div class="stab" onclick="dTab('collections',this)">Collections</div>
+    <div class="stab" onclick="dTab('handover',this)">Handover</div>
+    <div class="stab" onclick="dTab('ev',this)">Vehicle</div>
+  </div>
+  <div id="driver-content"></div>`;
+
+  dTab('route');
+}
+
+function dTab(t,el){
+  document.querySelectorAll('#driver-stabs .stab').forEach(s=>s.classList.remove('on'));
+  if(el) el.classList.add('on');
+  else{const stabs=document.querySelectorAll('#driver-stabs .stab');['route','collections','handover','ev'].forEach((tt,i)=>{if(tt===t)stabs[i]?.classList.add('on');});}
+  if(t==='route') renderDriverRoute();
+  else if(t==='collections') renderDriverCollections();
+  else if(t==='handover') renderDriverHandover();
+  else if(t==='ev') renderDriverEV();
+}
+
+function getMyDriverId(){
+  const drvMap={'9999999992':'D1','9999999994':'D2','9999999996':'D3'};
+  // If owner or loader or rep is acting as driver, use first available
+  return drvMap[CU.mobile]||DRIVERS_META[0].id;
+}
+
+function renderDriverRoute(){
+  const myDrvId=getMyDriverId();
+  const orders=LS.get('orders',[]).filter(o=>o.assignedDriver===myDrvId).sort((a,b)=>a.routeSeq-b.routeSeq);
+  const done=orders.filter(o=>o.status==='delivered').length;
+  const pending=orders.filter(o=>o.status!=='delivered'&&o.status!=='return').length;
+  const current=orders.find(o=>o.status==='dispatched'||o.status==='billed');
+
+  if(!orders.length){
+    document.getElementById('driver-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:32px">🗺️</div><div style="font-weight:700;margin-top:8px">No route assigned</div><div style="font-size:13px;margin-top:4px">Dispatch not yet triggered by owner</div></div>';
+    return;
+  }
+
+  const allCoords=orders.filter(o=>o.lat).map(o=>`${o.lat},${o.lng}`).join('/');
+  const mapsLink=`https://www.google.com/maps/dir/${allCoords}`;
+
+  document.getElementById('driver-content').innerHTML=`
+  <div class="mg mg-4" style="margin-bottom:12px">
+    <div class="mtile"><div class="mtile-val" style="color:var(--green)">${done}</div><div class="mtile-lab">Done</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--accent2)">${pending}</div><div class="mtile-lab">Left</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--danger)">${orders.filter(o=>o.status==='return').length}</div><div class="mtile-lab">Returns</div></div>
+    <div class="mtile"><div class="mtile-val" style="font-size:15px">${orders.length}</div><div class="mtile-lab">Total</div></div>
+  </div>
+  <a href="${mapsLink}" target="_blank" class="btn btn-primary btn-block" style="margin-bottom:12px;text-decoration:none">🗺️ Open Full Route in Google Maps</a>
+  <div class="card">
+    <div class="card-title">Today's Delivery Stops</div>
+    ${orders.map((o,i)=>{
+      const isCurr=o.status==='dispatched'||o.status==='billed';
+      const isDone=o.status==='delivered';
+      const isRet=o.status==='return';
+      const color=isDone?'var(--green)':isRet?'var(--danger)':isCurr?'var(--accent2)':'var(--muted)';
+      return `<div class="stop-row" style="opacity:${isDone?.6:1}">
+        <div class="stop-num" style="background:${color}">${isDone?'✓':isRet?'↩':i+1}</div>
+        <div class="stop-info">
+          <div class="stop-shop">${o.shop}</div>
+          <div class="stop-addr">${o.addr}</div>
+          <div class="stop-items">${o.items.map(x=>x.name+'×'+x.qty).join(', ')}</div>
+          <div class="stop-actions">
+            ${!isDone&&!isRet?`
+              <button class="btn btn-success btn-sm" onclick="openDelivery('${o.id}')">✅ Delivered</button>
+              <button class="btn btn-danger btn-sm" onclick="markReturn('${o.id}')">↩ Return</button>
+              <a href="https://maps.google.com/?q=${o.lat},${o.lng}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🗺️ Nav</a>
+            `:`<span style="font-size:11px;color:${color};font-weight:600">${isDone?'✅ DELIVERED':'↩ RETURNED'}</span>`}
+          </div>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${color};flex-shrink:0;margin-left:6px">₹${o.total}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function openDelivery(id){
+  deliveryOrderId=id;
+  const orders=LS.get('orders',[]);
+  const o=orders.find(x=>x.id===id);if(!o) return;
+  document.getElementById('dm-content').innerHTML=`
+  <div style="margin-bottom:14px">
+    <div style="font-weight:700;font-size:16px">${o.shop}</div>
+    <div style="font-size:12px;color:var(--muted)">${o.items.map(i=>i.name+'×'+i.qty).join(', ')}</div>
+    <div style="font-size:18px;font-weight:800;color:var(--accent);margin-top:6px">₹${o.total}</div>
+  </div>
+  <div class="field"><label>Payment Mode</label>
+    <select id="pay-mode" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:14px;background:#fff;outline:none">
+      <option value="upi">UPI / QR Code</option>
+      <option value="cash">Cash</option>
+    </select>
+  </div>
+  <div class="field"><label>Amount Collected (₹)</label>
+    <input type="number" id="pay-amount" value="${o.total}" style="border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;width:100%;font-size:15px;outline:none"/>
+  </div>
+  <div class="photo-zone" onclick="document.getElementById('pod-photo').click()" style="margin-bottom:12px">
+    <div class="pz-icon">📷</div><div class="pz-text">Tap to take delivery proof photo<br><span style="font-size:11px;color:var(--muted)">GPS + timestamp auto-added</span></div>
+  </div>
+  <input type="file" id="pod-photo" accept="image/*" capture="environment" style="display:none" onchange="document.getElementById('pod-prev').style.display='block'">
+  <img id="pod-prev" style="max-width:100%;border-radius:8px;margin-bottom:12px;display:none"/>
+  <button class="btn btn-success btn-block" onclick="confirmDelivery()">✅ Confirm Delivery & Collection</button>`;
+  showModal('delivery-modal');
+}
+
+function confirmDelivery(){
+  const orders=LS.get('orders',[]);
+  const o=orders.find(x=>x.id===deliveryOrderId);if(!o) return;
+  const mode=document.getElementById('pay-mode').value;
+  const amt=parseFloat(document.getElementById('pay-amount').value)||o.total;
+  o.status='delivered';o.collectedMode=mode;o.collectedAmt=amt;o.deliveredAt=new Date().toISOString();
+  LS.set('orders',orders);
+  const colls=LS.get('collections',[]);
+  colls.push({orderId:o.id,shop:o.shop,amt,mode,ts:new Date().toISOString(),driver:getMyDriverId()});
+  LS.set('collections',colls);
+  closeModal('delivery-modal');
+  haptic('success');
+  toast('✅ Delivery confirmed — ₹'+amt+' collected via '+mode.toUpperCase());
+  renderDriverRoute();
+}
+
+function markReturn(id){
+  const orders=LS.get('orders',[]);
+  const o=orders.find(x=>x.id===id);if(!o) return;
+  const reason=prompt('Return reason:\n1. Shopkeeper absent\n2. Shop closed\n3. Price dispute\n4. Over-stocked\n5. Wrong item\n\nType reason:');
+  if(!reason) return;
+  o.status='return';o.returnReason=reason;o.returnedAt=new Date().toISOString();
+  LS.set('orders',orders);
+  const rets=LS.get('returns',[]);
+  rets.push({orderId:o.id,shop:o.shop,items:o.items,reason,ts:new Date().toISOString(),driver:getMyDriverId(),reInwarded:false});
+  LS.set('returns',rets);
+  haptic('warning');
+  toast('↩ Marked as return: '+reason);
+  renderDriverRoute();
+}
+
+function renderDriverCollections(){
+  const orders=LS.get('orders',[]);
+  const myId=getMyDriverId();
+  const myOrds=orders.filter(o=>o.assignedDriver===myId);
+  const delivered=myOrds.filter(o=>o.status==='delivered');
+  const cashAmt=delivered.filter(o=>o.collectedMode==='cash').reduce((s,o)=>s+(o.collectedAmt||o.total),0);
+  const upiAmt=delivered.filter(o=>o.collectedMode==='upi').reduce((s,o)=>s+(o.collectedAmt||o.total),0);
+  document.getElementById('driver-content').innerHTML=`
+  <div class="mg mg-3" style="margin-bottom:12px">
+    <div class="mtile"><div class="mtile-val" style="color:var(--warn)">₹${cashAmt.toLocaleString('en-IN')}</div><div class="mtile-lab">Cash</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--accent)">₹${upiAmt.toLocaleString('en-IN')}</div><div class="mtile-lab">UPI</div></div>
+    <div class="mtile"><div class="mtile-val" style="color:var(--green)">₹${(cashAmt+upiAmt).toLocaleString('en-IN')}</div><div class="mtile-lab">Total</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Collection Log</div>
+    ${delivered.map(o=>`<div class="row">
+      <div><div style="font-weight:600;font-size:13px">${o.shop}</div><div style="font-size:11px;color:var(--muted)">${o.collectedMode?.toUpperCase()||'CASH'} · ${o.deliveredAt?istDT(o.deliveredAt):''}</div></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${o.collectedMode==='cash'?'var(--warn)':'var(--accent)'}">₹${o.collectedAmt||o.total}</div>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:13px">No deliveries yet</div>'}
+  </div>`;
+}
+
+function renderDriverHandover(){
+  const orders=LS.get('orders',[]);
+  const myId=getMyDriverId();
+  const delivered=orders.filter(o=>o.assignedDriver===myId&&o.status==='delivered');
+  const rets=orders.filter(o=>o.assignedDriver===myId&&o.status==='return');
+  const cashAmt=delivered.filter(o=>o.collectedMode==='cash').reduce((s,o)=>s+(o.collectedAmt||o.total),0);
+  const upiAmt=delivered.filter(o=>o.collectedMode==='upi').reduce((s,o)=>s+(o.collectedAmt||o.total),0);
+  document.getElementById('driver-content').innerHTML=`
+  <div class="card c-accent">
+    <div class="card-title">End of Day — Cash Handover</div>
+    <div class="row"><span>Cash to handover</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:var(--warn)">₹${cashAmt.toLocaleString('en-IN')}</span></div>
+    <div class="row"><span>UPI (auto-reconciled)</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent)">₹${upiAmt.toLocaleString('en-IN')}</span></div>
+    <div class="row"><span>Returned orders</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--danger)">${rets.length} orders</span></div>
+    <div class="divider"></div>
+    <div class="row"><span style="font-weight:700">Total Collected</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--green)">₹${(cashAmt+upiAmt).toLocaleString('en-IN')}</span></div>
+  </div>
+  ${rets.length?`<div class="card c-danger">
+    <div class="card-title">Returned Items — Place in Returns Rack</div>
+    ${rets.map(o=>`<div class="ret-item"><div style="font-weight:700">${o.shop}</div><div style="font-size:12px;color:var(--muted)">${o.items.map(i=>i.name+'×'+i.qty).join(', ')}</div><div style="font-size:11px;color:var(--danger);margin-top:4px">Reason: ${o.returnReason||'—'}</div></div>`).join('')}
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">⚠️ Tag each item with bill number and place in Returns Rack. Loader will re-inward tomorrow morning.</div>
+  </div>`:''}
+  <button class="btn btn-success btn-block" onclick="showCashModal(${cashAmt},${upiAmt})">💰 Initiate Cash Handover to Admin</button>
+  <button class="btn btn-ghost btn-block" onclick="plugInEV()">🔋 Mark EV Plugged In</button>`;
+}
+
+function showCashModal(cash,upi){
+  document.getElementById('cash-modal-content').innerHTML=`
+  <div style="text-align:center;margin-bottom:16px">
+    <div style="font-size:48px">💰</div>
+    <div style="font-size:28px;font-weight:800;color:var(--green);font-family:'Syne',sans-serif;margin-top:8px">₹${cash.toLocaleString('en-IN')}</div>
+    <div style="font-size:13px;color:var(--muted)">Cash to hand over to Admin</div>
+  </div>
+  <div class="field"><label>Actual Cash Count (₹)</label><input type="number" id="actual-cash" value="${cash}"/></div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:12px">UPI ₹${upi.toLocaleString('en-IN')} is auto-reconciled via PhonePe — no manual counting needed.</div>`;
+  showModal('cash-modal');
+}
+
+function confirmHandover(){
+  const actual=parseFloat(document.getElementById('actual-cash').value)||0;
+  closeModal('cash-modal');
+  toast(`✅ Cash handover: ₹${actual.toLocaleString('en-IN')} — Admin notified`);
+}
+
+function plugInEV(){toast('🔋 EV plugged in — overnight charge started');}
+
+function renderDriverEV(){
+  document.getElementById('driver-content').innerHTML=`
+  <div class="card c-green">
+    <div class="card-title">EV Status — Vehicle</div>
+    <div class="row"><span>Battery</span><span style="font-weight:700;color:var(--green)">78% 🔋</span></div>
+    <div class="row"><span>Est. Range</span><span style="font-family:'IBM Plex Mono',monospace">~32 km</span></div>
+    <div class="row"><span>Load Weight</span><span style="font-family:'IBM Plex Mono',monospace">~120 kg / 250 kg</span></div>
+    <div class="row"><span>Last Charged</span><span style="font-family:'IBM Plex Mono',monospace">5:00 AM today</span></div>
+    <div class="row"><span>Vehicle</span><span>Tiranga EV · MH04 XX 1234</span></div>
+  </div>
+  <div class="mg mg-2">
+    <button class="btn btn-danger btn-block" onclick="toast('🚨 Breakdown alert sent to owner!')">🚨 Report Breakdown</button>
+    <button class="btn btn-ghost btn-block" onclick="plugInEV()">🔋 Plug In (Charge)</button>
+  </div>`;
+}
+
+// ============================================================
+// LOADER PAGE
+// ============================================================
+function renderLoader(){
+  document.getElementById('page-loader').innerHTML=`
+  <div class="stabs" id="loader-stabs">
+    <div class="stab on" onclick="lTab('pick',this)">Pick & Load</div>
+    <div class="stab" onclick="lTab('inward',this)">Inward</div>
+    <div class="stab" onclick="lTab('returns',this)">Returns</div>
+  </div>
+  <div id="loader-content"></div>`;
+  lTab('pick');
+}
+
+function lTab(t,el){
+  document.querySelectorAll('#loader-stabs .stab').forEach(s=>s.classList.remove('on'));
+  if(el)el.classList.add('on');
+  else{['pick','inward','returns'].forEach((tt,i)=>{const s=document.querySelectorAll('#loader-stabs .stab')[i];if(tt===t&&s)s.classList.add('on');});}
+  if(t==='pick') renderPickList();
+  else if(t==='inward') renderInwardContent('loader-content');
+  else if(t==='returns') renderReturnsList();
+}
+
+function renderPickList(){
+  const orders=LS.get('orders',[]);
+  const pickState=LS.get('pick_state',{});
+  document.getElementById('loader-content').innerHTML=`
+  <div class="card c-accent" style="margin-bottom:12px">
+    <div class="card-title">Today's Pick & Load Plan</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Pick items driver-wise, stage in colored areas. Tick each item as picked.</div>
+    <button class="btn btn-success btn-block" onclick="confirmAllLoaded()">✅ All Vehicles Loaded — Confirm Dispatch Ready</button>
+  </div>
+  ${DRIVERS_META.map(d=>{
+    const dOrds=orders.filter(o=>o.assignedDriver===d.id&&(o.status==='billed'||o.status==='dispatched'));
+    const itemMap={};
+    dOrds.forEach(o=>o.items.forEach(i=>{if(!itemMap[i.name])itemMap[i.name]=0;itemMap[i.name]+=i.qty;}));
+    if(!Object.keys(itemMap).length) return `<div class="card" style="border-left:3px solid ${d.color};opacity:.5"><div style="font-weight:700;color:${d.color}">${d.avatar} ${d.name}</div><div style="font-size:12px;color:var(--muted)">No orders assigned yet</div></div>`;
+    const total=dOrds.reduce((s,o)=>s+o.total,0);
+    return `<div class="card" style="border-left:3px solid ${d.color}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:${d.color};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">${d.avatar}</div>
+          <div><div style="font-weight:700">${d.name}</div><div style="font-size:12px;color:var(--muted)">${dOrds.length} stops · ₹${total.toLocaleString('en-IN')}</div></div>
+        </div>
+        <a href="https://maps.google.com/?q=${dOrds.filter(o=>o.lat).map(o=>o.lat+','+o.lng).join('/')}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🗺️ Route</a>
+      </div>
+      ${Object.entries(itemMap).map(([item,qty])=>{
+        const pkey=d.id+'_'+item;
+        const isPicked=pickState[pkey];
+        return `<div class="pick-item ${isPicked?'picked':''}" onclick="togglePick('${pkey}')">
+          <div class="pick-check ${isPicked?'checked':''}">${isPicked?'✓':''}</div>
+          <div style="flex:1"><span style="font-weight:600">${item}</span></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:${d.color}">${qty} units</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('')}`;
+}
+
+function togglePick(key){
+  const state=LS.get('pick_state',{});
+  state[key]=!state[key];
+  LS.set('pick_state',state);
+  renderPickList();
+}
+
+function confirmAllLoaded(){
+  LS.set('pick_state',{});
+  toast('✅ All vehicles loaded — confirmed! Drivers can depart at 4:15 PM.');
+}
+
+// INWARD (shared by owner and loader)
+const BARCODE_MAP_FN=()=>{const bm={};Object.values(LS.get('brands',{})).forEach(b=>b.skus.forEach(s=>{bm[s.barcode]={...s,brandName:b.name,brandKey:Object.keys(LS.get('brands',{})).find(k=>LS.get('brands',{})[k].skus.some(x=>x.id===s.id))  };}));return bm;};
+
+function renderInwardContent(target){
+  document.getElementById(target).innerHTML=`
+  <div class="card">
+    <div class="card-title">Inventory Inward — Barcode Scan</div>
+    <div class="scan-box">
+      <div style="font-size:32px">📷</div>
+      <div style="font-size:13px;color:var(--muted);margin:6px 0">Scan supplier barcode or enter manually</div>
+      <div class="scan-code" id="scan-display">_ _ _ _ _ _ _ _ _ _</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+        <button class="btn btn-primary btn-sm" onclick="simScan()">📷 Scan (Demo)</button>
+        <button class="btn btn-ghost btn-sm" onclick="manualScan()">⌨️ Enter Code</button>
+      </div>
+    </div>
+    <div id="scan-result" style="display:none;margin-top:12px">
+      <div style="background:#d1fae5;border-radius:10px;padding:12px">
+        <div style="font-weight:700;font-size:15px" id="si-name">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Brand: <span id="si-brand">—</span> · Current Stock: <span id="si-stock">—</span></div>
+      </div>
+      <div class="field" style="margin-top:10px"><label>Qty Received</label><input type="number" id="in-qty" placeholder="Enter quantity" min="1"/></div>
+      <div class="field"><label>Supplier Invoice / Batch Ref</label><input type="text" id="in-ref" placeholder="Invoice number"/></div>
+      <div class="field"><label>Expiry Date (if applicable)</label><input type="date" id="in-expiry"/></div>
+      <button class="btn btn-success btn-block" onclick="confirmInward()">✅ Add to Stock</button>
+    </div>
+  </div>
+  <div class="sec-hdr">Recent Inward Entries</div>
+  <div id="inward-log-list"></div>`;
+  renderInwardLog();
+}
+
+let lastScannedBarcode='';
+function simScan(){
+  const bm=BARCODE_MAP_FN();
+  const barcodes=Object.keys(bm);
+  const code=barcodes[Math.floor(Math.random()*barcodes.length)];
+  processScan(code);
+}
+function manualScan(){
+  const code=prompt('Enter barcode number:');
+  if(code) processScan(code.trim());
+}
+function processScan(code){
+  lastScannedBarcode=code;
+  document.getElementById('scan-display').textContent=code;
+  const bm=BARCODE_MAP_FN();
+  const item=bm[code];
+  if(item){
+    document.getElementById('scan-result').style.display='block';
+    document.getElementById('si-name').textContent=item.name;
+    document.getElementById('si-brand').textContent=item.brandName;
+    document.getElementById('si-stock').textContent=item.stock+' units';
+    toast('✅ '+item.name+' identified');
+  }else{toast('⚠️ Unknown barcode — check and re-enter');}
+}
+function confirmInward(){
+  const qty=parseInt(document.getElementById('in-qty')?.value)||0;
+  const ref=document.getElementById('in-ref')?.value||'';
+  if(qty<=0){toast('Enter valid quantity');return;}
+  const bm=BARCODE_MAP_FN();
+  const item=bm[lastScannedBarcode];
+  if(!item){toast('No item scanned');return;}
+  // Update stock
+  const brands=LS.get('brands',{});
+  const b=brands[item.brandKey];
+  if(b){const s=b.skus.find(x=>x.id===item.id);if(s)s.stock+=qty;LS.set('brands',brands);}
+  // Log
+  const log=LS.get('inward_log',[]);
+  log.unshift({item:item.name,brand:item.brandName,qty,ref,ts:new Date().toISOString(),by:CU.name});
+  LS.set('inward_log',log);
+  document.getElementById('scan-result').style.display='none';
+  document.getElementById('scan-display').textContent='_ _ _ _ _ _ _ _ _ _';
+  document.getElementById('in-qty').value='';
+  document.getElementById('in-ref').value='';
+  toast(`✅ +${qty} ${item.name} added to stock`);
+  renderInwardLog();
+}
+function renderInwardLog(){
+  const log=LS.get('inward_log',[]);
+  const el=document.getElementById('inward-log-list');if(!el) return;
+  el.innerHTML=log.slice(0,15).map(e=>`
+  <div class="card" style="padding:12px;margin-bottom:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:700;font-size:13px">+${e.qty} ${e.item}</div>
+        <div style="font-size:12px;color:var(--muted)">${e.brand} · Ref: ${e.ref||'—'} · ${e.by}</div>
+        <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted)">${istDT(e.ts)}</div>
+      </div>
+      <span class="sk-ok">+${e.qty}</span>
+    </div>
+  </div>`).join('') || '<div style="color:var(--muted);font-size:13px;padding:10px">No inward entries yet</div>';
+}
+
+function renderReturnsList(){
+  const rets=LS.get('returns',[]);
+  document.getElementById('loader-content').innerHTML=`
+  <div class="card c-accent" style="margin-bottom:12px">
+    <div class="card-title">Returns Queue — Re-inward to Stock</div>
+    <div style="font-size:13px;color:var(--muted)">Inspect each returned item. Sellable → re-inward. Damaged → write off and notify brand.</div>
+  </div>
+  ${rets.filter(r=>!r.reInwarded).length
+    ?rets.filter(r=>!r.reInwarded).map((r,idx)=>`
+    <div class="ret-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:14px">${r.shop}</div>
+          <div style="font-size:12px;color:var(--muted)">${r.items.map(i=>i.name+'×'+i.qty).join(', ')}</div>
+          <div style="font-size:12px;color:var(--danger);margin-top:3px">Reason: ${r.reason}</div>
+          <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted)">${istDT(r.ts)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn btn-success btn-sm" onclick="reInward(${idx})">✅ Re-inward</button>
+          <button class="btn btn-danger btn-sm" onclick="writeOff(${idx})">❌ Write Off</button>
+        </div>
+      </div>
+    </div>`).join('')
+    :'<div class="card" style="text-align:center;color:var(--muted);padding:30px">✅ No pending returns to process</div>'}
+  ${rets.filter(r=>r.reInwarded).length?`<div class="sec-hdr">Processed Returns</div>${rets.filter(r=>r.reInwarded).map(r=>`<div class="card" style="padding:10px;margin-bottom:6px;opacity:.6"><div style="font-weight:600;font-size:13px">${r.shop} · ${r.items.map(i=>i.name).join(', ')}</div><div style="font-size:11px;color:var(--green)">${r.reInwarded}</div></div>`).join('')}`:''}`;
+}
+
+function reInward(idx){
+  const rets=LS.get('returns',[]);
+  const r=rets.filter(x=>!x.reInwarded)[idx];if(!r) return;
+  const brands=LS.get('brands',{});
+  r.items.forEach(item=>{
+    for(const [k,b] of Object.entries(brands)){
+      const s=b.skus.find(x=>x.id===item.id||x.name===item.name);
+      if(s){s.stock+=item.qty;break;}
+    }
+  });
+  LS.set('brands',brands);
+  const allRets=LS.get('returns',[]);
+  const target=allRets.find(x=>x.orderId===r.orderId&&!x.reInwarded);
+  if(target)target.reInwarded='Re-inwarded '+istNow()+' by '+CU.name;
+  LS.set('returns',allRets);
+  const log=LS.get('inward_log',[]);
+  r.items.forEach(item=>{log.unshift({item:item.name,brand:'Return',qty:item.qty,ref:'RETURN-'+r.orderId,ts:new Date().toISOString(),by:CU.name});});
+  LS.set('inward_log',log);
+  toast('✅ Returns re-inwarded to stock');
+  renderReturnsList();
+}
+
+function writeOff(idx){
+  const rets=LS.get('returns',[]);
+  const r=rets.filter(x=>!x.reInwarded)[idx];if(!r) return;
+  const allRets=LS.get('returns',[]);
+  const target=allRets.find(x=>x.orderId===r.orderId&&!x.reInwarded);
+  if(target)target.reInwarded='Written off '+istNow()+' — damaged/unsellable';
+  LS.set('returns',allRets);
+  toast('❌ Written off — brand notified');
+  renderReturnsList();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded',()=>{
+  seedData();
+  // Fix the greeting
+  const h=(new Date()).getHours();
+  // nothing needed here, done in renderOwnerDash
+});
+</script>
+</body>
+</html>
