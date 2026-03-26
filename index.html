@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DistribOS Full Business App</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+body{font-family:Arial;margin:0;background:#f5f5f5}
+.header{background:#2563eb;color:#fff;padding:15px;text-align:center}
+.container{padding:15px}
+.card{background:#fff;padding:12px;border-radius:10px;margin-bottom:10px}
+button{padding:10px;border:none;border-radius:6px;background:#2563eb;color:#fff;width:100%;margin-top:5px}
+input,select{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:1px solid #ccc}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">DistribOS - Business App</div>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login" class="card">
+<h3>Login</h3>
+<select id="role">
+<option value="owner">Owner</option>
+<option value="sales">Sales</option>
+<option value="driver">Driver</option>
+</select>
+<button onclick="login()">Enter</button>
+</div>
+
+<!-- SALES PANEL -->
+<div id="sales" class="hidden">
+<div class="card">
+<h3>Create Order</h3>
+<input id="shop" placeholder="Shop Name">
+<input id="amount" type="number" placeholder="Amount">
+<button onclick="createOrder()">Create Order</button>
+</div>
+</div>
+
+<!-- OWNER PANEL -->
+<div id="owner" class="hidden">
+<h3>All Orders</h3>
+<div id="ownerOrders"></div>
+</div>
+
+<!-- DRIVER PANEL -->
+<div id="driver" class="hidden">
+<h3>Driver Orders</h3>
+<div id="driverOrders"></div>
+</div>
+
+</div>
+
+<script>
+// FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyBfSR7OItS7aBvAfRDEb0wl1XJeS-nhVes",
+  authDomain: "distribos-thane.firebaseapp.com",
+  projectId: "distribos-thane"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentRole = '';
+
+function login(){
+  currentRole = document.getElementById('role').value;
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById(currentRole).classList.remove('hidden');
+}
+
+// CREATE ORDER (SALES)
+function createOrder(){
+  const shop=document.getElementById('shop').value;
+  const amount=document.getElementById('amount').value;
+
+  if(!shop||!amount){alert('Enter details');return;}
+
+  const id='ORD'+Date.now();
+
+  db.collection('orders').doc(id).set({
+    shop,
+    amount:Number(amount),
+    status:'pending',
+    driver:'unassigned',
+    ts:new Date().toISOString()
+  });
+
+  document.getElementById('shop').value='';
+  document.getElementById('amount').value='';
+}
+
+// REALTIME
+const ownerDiv=document.getElementById('ownerOrders');
+const driverDiv=document.getElementById('driverOrders');
+
+db.collection('orders').onSnapshot(snap=>{
+  let ownerHTML='';
+  let driverHTML='';
+
+  snap.forEach(doc=>{
+    const o=doc.data();
+
+    ownerHTML+=`<div class="card">
+      <b>${o.shop}</b><br>
+      ₹ ${o.amount}<br>
+      Status: ${o.status}<br>
+      <button onclick="assignDriver('${doc.id}')">Assign Driver</button>
+    </div>`;
+
+    if(o.driver==='assigned'){
+      driverHTML+=`<div class="card">
+        <b>${o.shop}</b><br>
+        ₹ ${o.amount}<br>
+        <button onclick="markDelivered('${doc.id}')">Mark Delivered</button>
+      </div>`;
+    }
+  });
+
+  ownerDiv.innerHTML=ownerHTML;
+  driverDiv.innerHTML=driverHTML;
+});
+
+// OWNER ACTION
+function assignDriver(id){
+  db.collection('orders').doc(id).update({driver:'assigned',status:'out for delivery'});
+}
+
+// DRIVER ACTION
+function markDelivered(id){
+  db.collection('orders').doc(id).update({status:'delivered'});
+}
+</script>
+
+</body>
+</html>
